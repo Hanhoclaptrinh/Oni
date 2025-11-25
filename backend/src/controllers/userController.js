@@ -32,54 +32,28 @@ export const getUserByIdHandler = async (req, res, next) => {
   }
 };
 
-export const getUserByEmailHandler = async (req, res, next) => {
+export const searchUserHandler = async (req, res, next) => {
   try {
-    const { email } = req.query;
+    const { email, username, displayName } = req.query;
 
-    if (!email) throw new error.BadRequestError("thiếu email");
+    if (!email && !username && !displayName) {
+      throw new error.BadRequestError("thiếu query search");
+    }
 
-    const data = await userService.getUserByEmail(email);
+    let user;
+
+    if (email) {
+      user = await userService.getUserByEmail(email);
+    } else if (username) {
+      user = await userService.getUserByUsername(username);
+    } else if (displayName) {
+      user = await userService.getUserByDisplayName(displayName);
+    }
 
     return res.status(200).json({
       success: true,
-      message: "lấy user theo email thành công",
-      data,
-    });
-  } catch (e) {
-    next(e);
-  }
-};
-
-export const getUserByUsernameHandler = async (req, res, next) => {
-  try {
-    const { username } = req.query;
-
-    if (!username) throw new error.BadRequestError("thiếu username");
-
-    const data = await userService.getUserByUsername(username);
-
-    return res.status(200).json({
-      success: true,
-      message: "lấy user theo username thành công",
-      data,
-    });
-  } catch (e) {
-    next(e);
-  }
-};
-
-export const getUserByDisplayNameHandler = async (req, res, next) => {
-  try {
-    const { displayName } = req.query;
-
-    if (!displayName) throw new error.BadRequestError("thiếu displayName");
-
-    const data = await userService.getUserByDisplayName(displayName);
-
-    return res.status(200).json({
-      success: true,
-      message: "lấy user theo displayName thành công",
-      data,
+      message: "tìm user thành công",
+      data: user,
     });
   } catch (e) {
     next(e);
@@ -168,34 +142,6 @@ export const deleteUserHandler = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "xóa thành công user",
-    });
-  } catch (e) {
-    next(e);
-  }
-};
-
-export const searchUserHandler = async (req, res, next) => {
-  try {
-    const { email, username, displayName } = req.query;
-
-    if (!email && !username && !displayName) {
-      throw new error.BadRequestError("thiếu query search");
-    }
-
-    let user;
-
-    if (email) {
-      user = await userService.getUserByEmail(email);
-    } else if (username) {
-      user = await userService.getUserByUsername(username);
-    } else if (displayName) {
-      user = await userService.getUserByDisplayName(displayName);
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "tìm user thành công",
-      data: user,
     });
   } catch (e) {
     next(e);
