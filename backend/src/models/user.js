@@ -54,11 +54,6 @@ const userSchema = new mongoose.Schema(
     },
 
     emailVerified: { type: Boolean, default: false },
-
-    isOnline: { type: Boolean, default: false },
-    socketId: { type: String, default: null, index: true },
-
-    lastLogin: { type: Date, default: null },
   },
   { timestamps: true }
 );
