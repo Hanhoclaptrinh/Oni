@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import connectDB from "./config/database.js";
 import authRoute from "./routes/authRoute.js";
 import userRoute from "./routes/userRoute.js";
+import { app, server } from './socket/index.js'
 
 dotenv.config();
 
@@ -17,6 +18,6 @@ app.use("/api/v1/users", userRoute);
 
 connectDB()
   .then(() => {
-    app.listen(port, () => console.log(`server đang chạy trên cổng ${port}`));
+    server.listen(port, () => console.log(`server is running on port ${port}`));
   })
-  .catch((e) => console.log(`không thể kết nối server ${e.message}`));
+  .catch((e) => console.log(`can not connect to server ${e.message}`));

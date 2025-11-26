@@ -10,7 +10,7 @@ const seed = async () => {
 
     const exist = await User.findOne({ email: "admin@gmail.com" })
     if (exist) {
-        console.log("Admin da ton tai")
+        console.log("admin account already existed")
         process.exit(0)
     }
 
@@ -24,7 +24,7 @@ const seed = async () => {
         role: "admin"
     })
 
-    console.log("tạo admin thành công")
+    console.log("seeded admin successfully")
     process.exit(0)
 }
 
