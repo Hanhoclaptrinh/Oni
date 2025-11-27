@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import user from "../models/user.js";
+import User from "../models/user.js";
 
 export const protectedRoute = (req, res, next) => {
   try {
@@ -31,17 +31,17 @@ export const protectedRoute = (req, res, next) => {
       }
 
       // tim user tu decoded info
-      const existingUser = await user
-        .findById(decoded.userId)
-        .select("-hashedPassword");
-      if (!existingUser) {
+      const user = await User.findById(decoded.userId).select(
+        "-hashedPassword"
+      );
+      if (!user) {
         return res
           .status(404)
           .json({ success: false, message: "user không tồn tại" });
       }
 
       // gan user vao req
-      req.existingUser = existingUser;
+      req.user = user;
 
       next();
     });

@@ -1,29 +1,29 @@
-import user from "../models/user.js";
+import User from "../models/user.js";
 
-export const findAllUsers = () => user.find().select("-hashedPassword").lean();
+export const findAllUsers = () => User.find().select("-hashedPassword").lean();
 
 export const findUserById = (id) =>
-  user.findById(id).select("-hashedPassword").lean();
+  User.findById(id).select("-hashedPassword").lean();
 
-export const findUserByEmail = (email) => user.findOne({ email }).lean();
+export const findUserByEmail = (email) => User.findOne({ email }).lean();
 
 export const findUserByUsername = (username) =>
-  user.findOne({ username }).lean();
+  User.findOne({ username }).lean();
 
 export const findUserByDisplayName = (displayName) =>
-  user.findOne({ displayName }).lean();
+  User.findOne({ displayName }).lean();
 
-export const findUserByEmailForLogin = (email) => user.findOne({ email }).select("+hashedPassword").lean();
+export const findUserByEmailForLogin = (email) =>
+  User.findOne({ email }).select("+hashedPassword").lean();
 
 export const insertUser = async (payload) => {
-  const doc = await user.create(payload);
+  const doc = await User.create(payload);
   return doc.toObject();
 };
 
 export const updateUser = (id, payload) =>
-  user
-    .findByIdAndUpdate(id, payload, { new: true })
+  User.findByIdAndUpdate(id, payload, { new: true })
     .select("-hashedPassword")
     .lean();
 
-export const deleteUser = (id) => user.findByIdAndDelete(id).lean();
+export const deleteUser = (id) => User.findByIdAndDelete(id).lean();

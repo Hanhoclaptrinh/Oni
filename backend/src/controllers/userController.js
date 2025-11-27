@@ -65,7 +65,7 @@ export const getMeHandler = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "lấy user hiện tại thành công",
-      data: req.existingUser,
+      data: req.user,
     });
   } catch (e) {
     next(e);
