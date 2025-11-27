@@ -36,10 +36,10 @@ class _AuthScreenState extends State<AuthScreen> {
                   // app name
                   Text(
                     "Oni Chat",
-                    style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
                   ),
 
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 24),
 
                   // app logo
                   Image.asset(
