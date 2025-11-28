@@ -24,6 +24,7 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: null,
       body: SafeArea(
         child: Column(
           children: [
@@ -137,43 +138,6 @@ class _AuthScreenState extends State<AuthScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  // tab button
-  Widget _tabButton(String label, int index) {
-    final bool active = _pageIndex == index;
-
-    return GestureDetector(
-      onTap: () {
-        _pageController.animateToPage(
-          index,
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeInOut,
-        );
-      },
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: active ? Colors.blue : Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 4),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            height: 3,
-            width: active ? 40 : 0,
-            decoration: BoxDecoration(
-              color: Colors.blue,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        ],
       ),
     );
   }

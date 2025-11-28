@@ -14,6 +14,7 @@ class SplashScreen extends StatelessWidget {
     });
 
     return Scaffold(
+      appBar: null,
       body: Center(
         child: Text(
           "oni.",

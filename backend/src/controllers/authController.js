@@ -8,7 +8,7 @@ export const signUpHandler = async (req, res, next) => {
     if (!username || !email || !password || !firstName || !lastName)
       throw new error.BadRequestError("vui lòng điền đủ thông tin");
 
-    await authService.signUp({
+    const result = await authService.signUp({
       username,
       email,
       password,
@@ -19,6 +19,7 @@ export const signUpHandler = async (req, res, next) => {
     return res.status(201).json({
       success: true,
       message: "đăng ký tài khoản thành công",
+      data: result,
     });
   } catch (e) {
     next(e);
@@ -53,7 +54,7 @@ export const signOutHandler = async (req, res, next) => {
 
     if (!refreshToken) throw new error.BadRequestError("thiếu refresh token");
 
-    await authService.signOut({refreshToken});
+    await authService.signOut({ refreshToken });
 
     return res.status(200).json({
       success: true,

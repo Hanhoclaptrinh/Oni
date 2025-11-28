@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/data/models/SignupRequest.dart';
+import 'package:frontend/data/services/AuthService.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -28,22 +30,43 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
-  // handle sign up
-  void _handleSignUp() {
-    if (_formKey.currentState!.validate()) {
+  // xử lý đăng ký
+  Future<void> _handleSignUp() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final signupRequest = SignupRequest(
+      username: _usernameController.text.trim(),
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+      firstName: _firstNameController.text.trim(),
+      lastName: _lastNameController.text.trim(),
+    );
+
+    try {
+      final authService = AuthService();
+      await authService.signup(signupRequest);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Đăng ký thành công: ${_usernameController.text}!',
+            'Đăng ký thành công',
             style: const TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.green,
-          duration: const Duration(seconds: 2),
         ),
       );
-      print('First Name: ${_firstNameController.text}');
-      print('Email: ${_emailController.text}');
-      print('Password: ${_passwordController.text}');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Đăng ký thất bại',
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -59,7 +82,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             // first and last name
             Row(
               children: [
-                // firstname
+                // lastname
                 Expanded(
                   child: _buildTextField(
                     controller: _lastNameController,
@@ -68,7 +91,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                // lastname
+                // firstname
                 Expanded(
                   child: _buildTextField(
                     controller: _firstNameController,
@@ -148,7 +171,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
             const SizedBox(height: 20),
 
-            // another login method
+            // đăng ký bằng phương thức khác
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -223,7 +246,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  // another login method
+  // đăng ký bằng phương thức khác
   Widget _buildSocialButton(String label, IconData icon, Color color) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),

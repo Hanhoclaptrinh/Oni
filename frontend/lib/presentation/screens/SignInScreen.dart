@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/data/models/SigninRequest.dart';
+import 'package:frontend/data/services/AuthService.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -23,20 +25,41 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   // handle sign in
-  void _handleSignIn() {
-    if (_formKey.currentState!.validate()) {
+  Future<void> _handleSignIn() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final signinRequest = SigninRequest(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
+
+    try {
+      final authService = AuthService();
+      await authService.signin(signinRequest);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Đang đăng nhập với: ${_emailController.text}...',
+            'Đăng nhập thành công',
             style: const TextStyle(color: Colors.white),
           ),
-          backgroundColor: Colors.blueAccent,
+          backgroundColor: Colors.green,
           duration: const Duration(seconds: 2),
         ),
       );
-      print('Email: ${_emailController.text}');
-      print('Password: ${_passwordController.text}');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Đăng nhập thất bại',
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 
@@ -53,7 +76,14 @@ class _SignInScreenState extends State<SignInScreen> {
             _buildTextField(
               controller: _emailController,
               labelText: "Email",
-              icon: Icons.person_outline,
+              icon: Icons.email_outlined,
+              isEmail: true,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Email không hợp lệ';
+                }
+                return null;
+              },
             ),
 
             // password
@@ -70,7 +100,7 @@ class _SignInScreenState extends State<SignInScreen> {
               },
             ),
 
-            // forgot password
+            // quên mật khẩu
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
@@ -134,7 +164,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
             const SizedBox(height: 20),
 
-            // another login method
+            // đăng nhập bằng phương thức khác
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -205,7 +235,7 @@ class _SignInScreenState extends State<SignInScreen> {
     );
   }
 
-  // another login method
+  // phương thức đăng nhập khác
   Widget _buildSocialButton(String label, IconData icon, Color color) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),

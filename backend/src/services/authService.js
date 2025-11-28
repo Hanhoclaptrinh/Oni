@@ -4,6 +4,10 @@ import * as sessionService from "./sessionService.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import user from "../models/user.js";
+
+// tao access token voi jwt
+const ACCESS_TOKEN_TTL = "10m"; // thoi gian AT song trong mot phien dang nhap -> duoc cap tu dong sau moi ttl die
 
 export const signUp = async (payload) => {
   const { username, email, password, firstName, lastName } = payload;
@@ -20,12 +24,30 @@ export const signUp = async (payload) => {
   const hashedPassword = await bcrypt.hash(password, 12);
   const displayName = `${firstName} ${lastName}`.trim();
 
-  return await userRepository.insertUser({
+  const newUser = await userRepository.insertUser({
     username,
     email,
     hashedPassword,
     displayName,
   });
+
+  const accessToken = jwt.sign(
+    {
+      userId: newUser._id,
+      role: newUser.role,
+    },
+    process.env.PRIVATE_ACCESS_TOKEN,
+    { expiresIn: ACCESS_TOKEN_TTL }
+  );
+
+  const refreshToken = crypto.randomBytes(64).toString("hex");
+
+  await sessionService.createSession({
+    userId: newUser._id,
+    refreshToken,
+  });
+
+  return { user: newUser, accessToken, refreshToken };
 };
 
 export const signIn = async (payload) => {
@@ -46,9 +68,6 @@ export const signIn = async (payload) => {
   if (!correctPassword)
     throw new error.BadRequestError("email hoặc password không đúng");
 
-  // tao access token voi jwt
-  const ACCESS_TOKEN_TTL = "10m"; // thoi gian AT song trong mot phien dang nhap -> duoc cap tu dong sau moi ttl die
-
   const accessToken = jwt.sign(
     {
       userId: existingUser._id,
@@ -66,7 +85,7 @@ export const signIn = async (payload) => {
     refreshToken,
   });
 
-  return { accessToken, refreshToken };
+  return { user: existingUser, accessToken, refreshToken };
 };
 
 export const signOut = async (payload) => {
