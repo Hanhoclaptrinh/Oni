@@ -1,6 +1,25 @@
 import * as sessionRepository from "../repositories/sessionRepository.js";
 import * as error from "../utils/error.js";
 
+export const getSessionByRefreshToken = async (refreshToken) => {
+  const session = await sessionRepository.findSessionByRefreshToken(
+    refreshToken
+  );
+
+  if (!session)
+    throw (
+      new error() >
+      error.UnauthorizedError("refresh token không hợp lệ hoặc đã bị thu hồi")
+    );
+
+  if (new Date(session.expiresAt).getTime() < Date.now()) {
+    await sessionRepository.deleteSession(session._id);
+    throw new error.UnauthorizedError("refresh token đã hết hạn");
+  }
+
+  return session;
+};
+
 export const createSession = async ({ userId, refreshToken }) => {
   if (!userId) throw new error.BadRequestError("thiếu userId");
 
@@ -14,6 +33,14 @@ export const createSession = async ({ userId, refreshToken }) => {
     refreshToken,
     expiresAt,
   });
+};
+
+export const modifySession = async (sessionId, payload) => {
+  const existingSession = await sessionRepository.findSessionById(sessionId);
+
+  if (!existingSession) throw new error.NotFoundError("không tìm thấy session");
+
+  return await sessionRepository.updateSession(sessionId, payload);
 };
 
 export const logout = async (refreshToken) => {

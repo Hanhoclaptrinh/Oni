@@ -10,7 +10,8 @@ class AuthService {
 
   static const _signUpUrl = "/auth/signup";
   static const _signInUrl = "/auth/signin";
-  // static const _signOutUrl = "/auth/signout";
+  static const _signOutUrl = "/auth/signout";
+  static const _refreshTokenUrl = "/auth/refresh";
   static const _getMeUrl = "/users/me";
 
   Future<AuthResult> signup(SignupRequest req) async {
@@ -31,13 +32,26 @@ class AuthService {
     }
   }
 
-  // Future<void> signout(SignoutRequest req) async {
-  //   try {
-  //     await _dio.post(_signOutUrl, data: req.toJson());
-  //   } catch (e) {
-  //     throw (e);
-  //   }
-  // }
+  Future<void> signout(String refreshToken) async {
+    try {
+      await _dio.post(_signOutUrl, data: {"refreshToken": refreshToken});
+    } catch (e) {
+      throw (e);
+    }
+  }
+
+  Future<AuthResult> refreshToken(String? refreshToken) async {
+    try {
+      final res = await _dio.post(
+        _refreshTokenUrl,
+        data: {"refreshToken": refreshToken},
+      );
+
+      return AuthResult.fromJson(res.data["data"]);
+    } catch (e) {
+      throw (e);
+    }
+  }
 
   Future<User> getme(String accessToken) async {
     try {

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/data/models/SignupRequest.dart';
+import 'package:frontend/data/models/User.dart';
 import 'package:frontend/data/services/AuthService.dart';
+import 'package:frontend/data/services/LocalStorageService.dart';
+import 'package:frontend/presentation/screens/MainScreen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -46,7 +49,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     try {
       final authService = AuthService();
-      await authService.signup(signupRequest);
+      final authResult = await authService.signup(signupRequest);
+
+      final localStorageService = LocalStorageService();
+      localStorageService.saveToken(authResult.refreshToken);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -57,11 +63,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
           backgroundColor: Colors.green,
         ),
       );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => MainScreen()),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Đăng ký thất bại',
+            'Đăng ký thất bại $e',
             style: const TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.red,
@@ -178,7 +189,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 _buildSocialButton("Google", Icons.g_mobiledata, Colors.red),
                 _buildSocialButton("Facebook", Icons.facebook, Colors.blue),
                 _buildSocialButton("Apple", Icons.apple, Colors.black),
-                // _buildSocialButton("Github", Icons.github, Colors.black),
               ],
             ),
           ],

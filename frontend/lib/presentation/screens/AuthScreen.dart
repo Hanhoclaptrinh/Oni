@@ -63,7 +63,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     child: Column(
                       children: [
                         Text(
-                          "Sign In",
+                          "Đăng nhập",
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 18,
@@ -92,7 +92,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     child: Column(
                       children: [
                         Text(
-                          "Sign Up",
+                          "Đăng ký",
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 18,

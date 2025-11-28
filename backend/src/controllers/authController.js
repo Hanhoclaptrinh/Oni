@@ -64,3 +64,21 @@ export const signOutHandler = async (req, res, next) => {
     next(e);
   }
 };
+
+export const refreshTokenHandler = async (req, res, next) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) throw new error.BadRequestError("thiếu refresh token");
+
+    const result = await authService.refresh({ refreshToken });
+
+    return res.status(200).json({
+      success: true,
+      message: "refresh token thành công",
+      data: result,
+    });
+  } catch (e) {
+    next(e);
+  }
+};

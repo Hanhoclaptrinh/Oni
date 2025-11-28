@@ -4,7 +4,6 @@ import * as sessionService from "./sessionService.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import user from "../models/user.js";
 
 // tao access token voi jwt
 const ACCESS_TOKEN_TTL = "10m"; // thoi gian AT song trong mot phien dang nhap -> duoc cap tu dong sau moi ttl die
@@ -96,4 +95,46 @@ export const signOut = async (payload) => {
   await sessionService.logout(refreshToken);
 
   return true;
+};
+
+export const refresh = async (payload) => {
+  const { refreshToken } = payload;
+
+  if (!refreshToken) throw new error.BadRequestError("thiếu refresh token");
+
+  const existingSession = await sessionService.getSessionByRefreshToken(
+    refreshToken
+  );
+
+  if (!existingSession)
+    throw new error.UnauthorizedError("refresh token không hợp lệ");
+
+  const existingUser = await userRepository.findUserById(
+    existingSession.userId
+  );
+
+  if (!existingUser) throw new error.NotFoundError("không tìm thấy user");
+
+  // server cấp một cặp AT-RT mới
+  const newAccessToken = jwt.sign(
+    {
+      userId: existingUser._id,
+      role: existingUser.role,
+    },
+    process.env.PRIVATE_ACCESS_TOKEN,
+    { expiresIn: ACCESS_TOKEN_TTL }
+  );
+
+  const newRefreshToken = crypto.randomBytes(64).toString("hex");
+
+  // rotation token
+  const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000;
+  const newExpiresAt = Date.now() + REFRESH_TOKEN_TTL;
+
+  await sessionService.modifySession(existingSession._id, {
+    refreshToken: newRefreshToken,
+    expiresAt: newExpiresAt,
+  });
+
+  return { newAccessToken, newRefreshToken };
 };

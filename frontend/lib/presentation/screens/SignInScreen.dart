@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/data/models/SigninRequest.dart';
 import 'package:frontend/data/services/AuthService.dart';
+import 'package:frontend/data/services/LocalStorageService.dart';
+import 'package:frontend/presentation/screens/MainScreen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -24,7 +26,7 @@ class _SignInScreenState extends State<SignInScreen> {
     super.dispose();
   }
 
-  // handle sign in
+  // xử lý đăng nhập
   Future<void> _handleSignIn() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -37,7 +39,10 @@ class _SignInScreenState extends State<SignInScreen> {
 
     try {
       final authService = AuthService();
-      await authService.signin(signinRequest);
+      final authResult = await authService.signin(signinRequest);
+
+      final localStorageService = LocalStorageService();
+      localStorageService.saveToken(authResult.refreshToken);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -48,6 +53,11 @@ class _SignInScreenState extends State<SignInScreen> {
           backgroundColor: Colors.green,
           duration: const Duration(seconds: 2),
         ),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => MainScreen()),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
