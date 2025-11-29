@@ -41,7 +41,11 @@ export const protectedRoute = (req, res, next) => {
       }
 
       // gan user vao req
-      req.user = user;
+      req.user = {
+        id: user._id.toString(),
+        role: user.role,
+        ...user.toObject(),
+      };
 
       next();
     });
