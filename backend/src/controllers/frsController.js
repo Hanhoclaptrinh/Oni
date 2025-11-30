@@ -30,7 +30,7 @@ export const createFriendRequestHandler = async (req, res, next) => {
 export const acceptFriendRequestHandler = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const friendshipId = req.params.id;
+    const friendshipId = req.params.friendshipId;
 
     if (!friendshipId) {
       return res.status(400).json({
@@ -57,7 +57,7 @@ export const acceptFriendRequestHandler = async (req, res, next) => {
 export const declineFriendRequestHandler = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const friendshipId = req.params.id;
+    const friendshipId = req.params.friendshipId;
 
     if (!friendshipId) {
       return res.status(400).json({
@@ -80,7 +80,7 @@ export const declineFriendRequestHandler = async (req, res, next) => {
 export const cancelFriendRequestHandler = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const friendshipId = req.params.id;
+    const friendshipId = req.params.friendshipId;
 
     if (!friendshipId) {
       return res.status(400).json({
@@ -151,7 +151,7 @@ export const getAllFriendsHandler = async (req, res, next) => {
 export const removeFriendHandler = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const friendId = req.params.id;
+    const friendId = req.params.friendId;
 
     if (!friendId) {
       return res.status(400).json({

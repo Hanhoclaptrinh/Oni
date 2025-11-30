@@ -13,15 +13,21 @@ router.get("/requests/sent", frsController.getSentRequestsHandler);
 
 router.post("/requests", frsController.createFriendRequestHandler);
 
-router.patch("/requests/:id/accept", frsController.acceptFriendRequestHandler);
+router.patch(
+  "/requests/:friendshipId/accept",
+  frsController.acceptFriendRequestHandler
+);
 
 router.patch(
-  "/requests/:id/decline",
+  "/requests/:friendshipId/decline",
   frsController.declineFriendRequestHandler
 );
 
-router.delete("/requests/:id", frsController.cancelFriendRequestHandler);
+router.delete(
+  "/requests/:friendshipId",
+  frsController.cancelFriendRequestHandler
+);
 
-router.delete("/:id", frsController.removeFriendHandler);
+router.delete("/:friendId", frsController.removeFriendHandler);
 
 export default router;

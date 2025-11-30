@@ -16,11 +16,11 @@ export const getAllUsersHandler = async (req, res, next) => {
 
 export const getUserByIdHandler = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const userId = req.params.userId;
 
-    if (!id) throw new error.BadRequestError("thiếu id");
+    if (!userId) throw new error.BadRequestError("thiếu id");
 
-    const data = await userService.getUserById(id);
+    const data = await userService.getUserById(userId);
 
     return res.status(200).json({
       success: true,
@@ -113,13 +113,13 @@ export const createUserHandler = async (req, res, next) => {
 
 export const updateUserHandler = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const userId = req.params.userId;
 
-    if (!id) throw new error.BadRequestError("thiếu id");
+    if (!userId) throw new error.BadRequestError("thiếu id");
     if (!Object.keys(req.body).length)
       throw new error.BadRequestError("body không được để trống");
 
-    const updatedUser = await userService.modifyUser(id, req.body);
+    const updatedUser = await userService.modifyUser(userId, req.body);
 
     return res.status(200).json({
       success: true,
@@ -133,11 +133,11 @@ export const updateUserHandler = async (req, res, next) => {
 
 export const deleteUserHandler = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const userId = req.params.userId;
 
-    if (!id) throw new error.BadRequestError("thiếu id");
+    if (!userId) throw new error.BadRequestError("thiếu id");
 
-    await userService.removeUser(id);
+    await userService.removeUser(userId);
 
     return res.status(200).json({
       success: true,

@@ -18,6 +18,7 @@ const conversationSchema = new mongoose.Schema(
     ],
 
     // private chat
+    // chống trùng hội thoại
     memberHash: {
       type: String,
       unique: true,

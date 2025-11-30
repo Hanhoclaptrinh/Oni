@@ -29,6 +29,7 @@ const friendShipSchema = new mongoose.Schema(
       default: null,
     },
 
+    // người thực hiện hành động gửi
     actionUser: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
