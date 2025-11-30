@@ -23,7 +23,7 @@ export const createGroupConversationService = async (creatorId, memberIds) => {
     throw new error.BadRequestError("nhóm không được rỗng");
 
   if (memberIds.length < 2)
-    throw new BadRequestError("nhóm phải có ít nhất 3 thành viên");
+    throw new error.BadRequestError("nhóm phải có ít nhất 3 thành viên");
 
   return await cvsRepository.createGroupConversation(creatorId, memberIds);
 };

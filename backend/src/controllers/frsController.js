@@ -170,3 +170,52 @@ export const removeFriendHandler = async (req, res, next) => {
     next(e);
   }
 };
+
+// chặn
+export const blockUserHandler = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { targetUserId } = req.body;
+
+    if (!targetUserId) {
+      return res.status(400).json({
+        success: false,
+        message: "thiếu id người cần chặn",
+      });
+    }
+
+    const result = await frsService.blockUserService(userId, targetUserId);
+
+    return res.status(200).json({
+      success: true,
+      message: "đã chặn người dùng",
+      data: result,
+    });
+  } catch (e) {
+    next(e);
+  }
+};
+
+// mở chặn
+export const unblockUserHandler = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { targetUserId } = req.body;
+
+    if (!targetUserId) {
+      return res.status(400).json({
+        success: false,
+        message: "thiếu id người cần mở chặn",
+      });
+    }
+
+    await frsService.unblockUserService(userId, targetUserId);
+
+    return res.status(200).json({
+      success: true,
+      message: "đã mở chặn",
+    });
+  } catch (e) {
+    next(e);
+  }
+};

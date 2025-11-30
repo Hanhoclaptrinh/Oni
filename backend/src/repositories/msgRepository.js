@@ -2,10 +2,11 @@ import Message from "../models/message.js";
 import Conversation from "../models/conversation.js";
 
 // lấy lịch sử chat
-export const getMessages = (conversationId, skip = 0) =>
+export const getMessages = (conversationId, skip = 0, limit = 50) =>
   Message.find({ conversationId })
     .sort({ createdAt: -1 })
     .skip(skip)
+    .limit(limit)
     .lean();
 
 // gửi tin nhắn

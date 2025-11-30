@@ -30,4 +30,8 @@ router.delete(
 
 router.delete("/:friendId", frsController.removeFriendHandler);
 
+router.post("/block", frsController.blockUserHandler);
+
+router.post("/unblock", frsController.unblockUserHandler);
+
 export default router;

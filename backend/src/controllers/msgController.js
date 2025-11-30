@@ -63,9 +63,10 @@ export const markMessagesAsSeenHandler = async (req, res, next) => {
 
 export const deleteMessageHandler = async (req, res, next) => {
   try {
+    const userId = req.user.id;
     const { msgId } = req.params;
 
-    await msgService.deleteMessageService(msgId);
+    await msgService.deleteMessageService(msgId, userId);
 
     return res.status(200).json({
       success: true,

@@ -23,6 +23,18 @@ const friendShipSchema = new mongoose.Schema(
       index: true,
     },
 
+    // trạng thái quan hệ bạn bè
+    previousStatus: {
+      type: String,
+      enum: ["pending", "accepted", null],
+      default: null,
+    },
+
+    isBlocked: {
+      type: Boolean,
+      default: null,
+    },
+
     blockedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
