@@ -1,8 +1,16 @@
 import express from "express";
-// import * as msgController from "../controllers/msgController.js";
+import * as msgController from "../controllers/msgController.js";
+import { protectedRoute } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
-// router.post("/private", msgController.sendPrivateMessageHandler);
-// router.post("/group", msgController.sendGroupMessageHandler);
+router.use(protectedRoute);
+
+router.get("/:conversationId", msgController.getMessagesHandler);
+
+router.post("/send", msgController.sendMessageHandler);
+
+router.patch("/seen/:conversationId", msgController.markMessagesAsSeenHandler);
+
+router.delete("/:msgId", msgController.deleteMessageHandler);
 
 export default router;

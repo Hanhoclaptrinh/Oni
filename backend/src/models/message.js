@@ -8,7 +8,7 @@ const messageSchema = new mongoose.Schema(
       required: true,
     },
 
-    sender: {
+    senderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
@@ -24,16 +24,12 @@ const messageSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: null,
+      maxlength: 5000,
     },
 
     fileUrl: {
       type: String,
       trim: true,
-      default: null,
-    },
-
-    fileId: {
-      type: String,
       default: null,
     },
 
@@ -47,6 +43,6 @@ const messageSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-messageSchema.index({ conversation: 1, createdAt: -1 });
+messageSchema.index({ conversationId: 1, createdAt: -1 });
 
 export default mongoose.model("Message", messageSchema);
