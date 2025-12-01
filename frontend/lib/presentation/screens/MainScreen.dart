@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/data/services/AuthService.dart';
-import 'package:frontend/data/services/LocalStorageService.dart';
-import 'package:frontend/presentation/screens/AuthScreen.dart';
+import 'package:frontend/core/constants/AppColors.dart';
+import 'package:frontend/presentation/screens/ConversationScreen.dart';
+import 'package:frontend/presentation/screens/FriendScreen.dart';
+import 'package:frontend/presentation/screens/ProfileScreen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -11,48 +12,85 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  Future<void> _handleSignOut() async {
-    final localStorageService = LocalStorageService();
-    String? refreshToken = await localStorageService.getToken();
+  final PageController _pageController = PageController(initialPage: 0);
+  int _pageIndex = 0;
 
-    if (refreshToken == null) {
-      _removeTokenAndRedirect();
-    }
-
-    try {
-      final authService = AuthService();
-      await authService.signout(refreshToken!);
-
-      _removeTokenAndRedirect();
-    } catch (e) {
-      throw e;
-    }
+  // xử lý chọn bottom item
+  void _onItemTapped(int index) {
+    setState(() {
+      _pageIndex = index;
+    });
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
   }
 
-  void _removeTokenAndRedirect() async {
-    final localStorageService = LocalStorageService();
-    await localStorageService.clearToken();
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => AuthScreen()),
-    );
+  // xử lý vuốt màn hình
+  void _onPageChanged(int index) {
+    setState(() {
+      _pageIndex = index;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    // --- TẠO DỮ LIỆU GIẢ Ở ĐÂY ---
+    final UserProfile mockUser = UserProfile(
+      username: "chaoem",
+      email: "hanprovip@gmail.com",
+      displayName: "Han Cuto",
+      role: "user",
+      avatarUrl: null,
+      bio: "Mobile Developer | Flutter Enthusiast",
+      emailVerified: false,
+      createdAt: DateTime.now(),
+    );
+
     return Scaffold(
-      appBar: null,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      body: SafeArea(
+        child: PageView(
+          controller: _pageController,
+          onPageChanged: _onPageChanged,
           children: [
-            Text("Main content here"),
-            SizedBox(height: 50),
-            TextButton.icon(
-              onPressed: _handleSignOut,
-              label: Text("Đăng xuất"),
-              icon: Icon(Icons.logout),
+            Center(child: Text("Home Screen")),
+            FriendScreen(),
+            Center(child: Text("Post Screen")),
+            ConversationScreen(),
+            ProfileScreen(user: mockUser),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Container(
+        child: BottomNavigationBar(
+          currentIndex: _pageIndex,
+          onTap: _onItemTapped,
+          backgroundColor: Colors.white,
+          selectedItemColor: AppColors.primaryBlue,
+          showUnselectedLabels: false,
+          type: BottomNavigationBarType.fixed,
+          elevation: 0,
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_rounded),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.search_rounded),
+              label: 'Friend',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.add_box_rounded),
+              label: 'Post',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.chat_bubble_rounded),
+              label: 'Chat',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_rounded),
+              label: 'Profile',
             ),
           ],
         ),
