@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/data/models/SignupRequest.dart';
-import 'package:frontend/data/models/User.dart';
 import 'package:frontend/data/services/AuthService.dart';
 import 'package:frontend/data/services/LocalStorageService.dart';
 import 'package:frontend/presentation/screens/MainScreen.dart';

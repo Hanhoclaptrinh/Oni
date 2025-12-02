@@ -17,7 +17,7 @@ class AuthService {
       final res = await _dio.post(_signUpUrl, data: req.toJson());
       return AuthResult.fromJson(res.data["data"]);
     } catch (e) {
-      throw (e);
+      rethrow;
     }
   }
 
@@ -26,7 +26,7 @@ class AuthService {
       final res = await _dio.post(_signInUrl, data: req.toJson());
       return AuthResult.fromJson(res.data["data"]);
     } catch (e) {
-      throw (e);
+      rethrow;
     }
   }
 
@@ -34,7 +34,7 @@ class AuthService {
     try {
       await _dio.post(_signOutUrl, data: {"refreshToken": refreshToken});
     } catch (e) {
-      throw (e);
+      rethrow;
     }
   }
 
@@ -47,7 +47,7 @@ class AuthService {
 
       return AuthResult.fromJson(res.data["data"]);
     } catch (e) {
-      throw (e);
+      rethrow;
     }
   }
 }

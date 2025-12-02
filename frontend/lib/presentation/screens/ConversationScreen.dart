@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/constants/AppColors.dart';
 
+// --- MÀN HÌNH DANH SÁCH CUỘC TRÒ CHUYỆN ---
+
 class ConversationScreen extends StatelessWidget {
   const ConversationScreen({super.key});
 
@@ -8,81 +10,42 @@ class ConversationScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          "Conversations",
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textDark,
-          ),
+      body: CustomScrollView(
+        // <-- SỬ DỤNG CUSTOMSCROLLVIEW
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
-            onPressed: () {},
+        slivers: <Widget>[
+          // 1. SLIVERAPPBAR: Thay thế cho AppBar tiêu chuẩn
+          _buildSliverAppBar(),
+
+          // 2. SLIVERTOBOXADAPTER: Chứa thanh tìm kiếm (widget tĩnh)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: Column(
+                children: [
+                  const SizedBox(height: 10),
+                  _buildSearchBar(),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ),
+
+          // 3. SLIVERLIST: Chứa danh sách các cuộc trò chuyện
+          SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              return Padding(
+                // Chỉ thêm padding ngang ở đây, padding dọc đã có trong _buildConversationItem
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: _buildConversationItem(context, chatData[index]),
+              );
+            }, childCount: chatData.length),
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 2,
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: "Search a friend",
-                  hintStyle: const TextStyle(color: AppColors.textGrey),
-                  border: InputBorder.none,
-                  prefixIcon: Container(
-                    padding: const EdgeInsets.all(8),
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: const BoxDecoration(
-                      color: AppColors.primaryBlue,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.search_rounded,
-                      color: Colors.white,
-                      size: 25,
-                    ),
-                  ),
-                  prefixIconConstraints: const BoxConstraints(
-                    minWidth: 40,
-                    minHeight: 40,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: ListView.builder(
-                itemCount: chatData.length,
-                physics: const BouncingScrollPhysics(),
-                itemBuilder: (context, index) {
-                  return _buildConversationItem(context, chatData[index]);
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+      // Giữ nguyên FloatingActionButton
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
         backgroundColor: AppColors.primaryBlue,
@@ -92,6 +55,73 @@ class ConversationScreen extends StatelessWidget {
     );
   }
 
+  // Phương thức xây dựng SliverAppBar (Thanh điều hướng cuộn)
+  Widget _buildSliverAppBar() {
+    return SliverAppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      pinned: true, // Giữ thanh AppBar ở trên cùng khi cuộn
+      floating: false,
+      expandedHeight: 80, // Chiều cao ban đầu
+      flexibleSpace: FlexibleSpaceBar(
+        centerTitle: true,
+        titlePadding: const EdgeInsets.only(left: 20.0, bottom: 16.0),
+        title: const Text(
+          "Conversations",
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textDark,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Phương thức xây dựng ô tìm kiếm
+  Widget _buildSearchBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 2,
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: "Search a friend",
+          hintStyle: const TextStyle(color: AppColors.textGrey),
+          border: InputBorder.none,
+          prefixIcon: Container(
+            padding: const EdgeInsets.all(8),
+            margin: const EdgeInsets.only(right: 8),
+            decoration: const BoxDecoration(
+              color: AppColors.primaryBlue,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.search_rounded,
+              color: Colors.white,
+              size: 25,
+            ),
+          ),
+          prefixIconConstraints: const BoxConstraints(
+            minWidth: 40,
+            minHeight: 40,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Phương thức xây dựng mục hội thoại
   Widget _buildConversationItem(
     BuildContext context,
     Map<String, dynamic> chat,
@@ -146,6 +176,8 @@ class ConversationScreen extends StatelessWidget {
   }
 }
 
+// --- MÀN HÌNH CHI TIẾT CHAT ---
+
 class ChatDetailScreen extends StatelessWidget {
   final Map<String, dynamic> user;
   const ChatDetailScreen({super.key, required this.user});
@@ -156,6 +188,7 @@ class ChatDetailScreen extends StatelessWidget {
       backgroundColor: AppColors.lightBlueBg,
       body: Column(
         children: [
+          // Thanh Header Chat
           Container(
             padding: const EdgeInsets.only(
               top: 50,
@@ -205,22 +238,30 @@ class ChatDetailScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+                // Thêm Icons actions nếu cần (vd: Call, Video)
               ],
             ),
           ),
 
+          // Danh sách tin nhắn
           Expanded(
             child: ListView.builder(
+              reverse: true, // Cuộn từ dưới lên
               padding: const EdgeInsets.all(20),
               physics: const BouncingScrollPhysics(),
               itemCount: messages.length,
               itemBuilder: (context, index) {
-                final isMe = messages[index]['isMe'];
-                return _buildMessageBubble(messages[index]['text'], isMe);
+                final message =
+                    messages[messages.length -
+                        1 -
+                        index]; // Đảo ngược index để tin nhắn mới nhất ở dưới
+                final isMe = message['isMe'] as bool;
+                return _buildMessageBubble(message['text'] as String, isMe);
               },
             ),
           ),
 
+          // Ô nhập tin nhắn
           Container(
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
             color: Colors.transparent,
@@ -268,6 +309,7 @@ class ChatDetailScreen extends StatelessWidget {
     );
   }
 
+  // Phương thức xây dựng Bubble Chat
   Widget _buildMessageBubble(String text, bool isMe) {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -337,7 +379,6 @@ final List<Map<String, dynamic>> chatData = [
     "image": "https://i.pravatar.cc/150?img=59",
   },
 
-  // Thêm 5 người mới
   {
     "name": "Sabbir Ahmed",
     "message": "Are you coming today?",
