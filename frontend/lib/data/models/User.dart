@@ -10,6 +10,7 @@ class User {
   final String? avatarId;
   final String role;
   final bool emailVerified;
+  final DateTime createdAt;
 
   User({
     required this.id,
@@ -21,6 +22,7 @@ class User {
     this.avatarId,
     required this.role,
     required this.emailVerified,
+    required this.createdAt
   });
 
   // lấy dữ liệu từ json và chuyển thành User
@@ -35,6 +37,7 @@ class User {
       avatarId: json['avatarId'],
       role: json['role'],
       emailVerified: json['emailVerified'],
+      createdAt: DateTime.parse(json["createdAt"])
     );
   }
 }

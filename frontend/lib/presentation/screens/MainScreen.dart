@@ -36,18 +36,6 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // --- TẠO DỮ LIỆU GIẢ Ở ĐÂY ---
-    final UserProfile mockUser = UserProfile(
-      username: "chaoem",
-      email: "hanprovip@gmail.com",
-      displayName: "Han Cuto",
-      role: "user",
-      avatarUrl: null,
-      bio: "Mobile Developer | Flutter Enthusiast",
-      emailVerified: false,
-      createdAt: DateTime.now(),
-    );
-
     return Scaffold(
       body: SafeArea(
         child: PageView(
@@ -58,7 +46,7 @@ class _MainScreenState extends State<MainScreen> {
             FriendScreen(),
             Center(child: Text("Post Screen")),
             ConversationScreen(),
-            ProfileScreen(user: mockUser),
+            ProfileScreen(),
           ],
         ),
       ),

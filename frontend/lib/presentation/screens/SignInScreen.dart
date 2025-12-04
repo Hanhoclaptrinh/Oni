@@ -42,7 +42,10 @@ class _SignInScreenState extends State<SignInScreen> {
       final authResult = await authService.signin(signinRequest);
 
       final localStorageService = LocalStorageService();
-      localStorageService.saveToken(authResult.refreshToken);
+      await localStorageService.saveTokens(
+        authResult.accessToken,
+        authResult.refreshToken,
+      );
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -91,6 +94,9 @@ class _SignInScreenState extends State<SignInScreen> {
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Email không hợp lệ';
+                }
+                if (!value.contains("@")) {
+                  return "Email không hợp lệ";
                 }
                 return null;
               },

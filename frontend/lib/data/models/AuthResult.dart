@@ -15,7 +15,7 @@ class AuthResult {
   factory AuthResult.fromJson(Map<String, dynamic> json) {
     final userData = json["user"];
     return AuthResult(
-      user: userData != null ? User.fromJson(json['user']) : null,
+      user: userData != null ? User.fromJson(userData) : null,
       accessToken: json['accessToken'] ?? json['newAccessToken'],
       refreshToken: json['refreshToken'] ?? json['newRefreshToken'],
     );

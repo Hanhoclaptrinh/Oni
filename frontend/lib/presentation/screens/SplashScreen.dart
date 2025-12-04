@@ -19,29 +19,25 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkAuthStatus() async {
-    // đọc RT từ FSS
-    final localStorageService = LocalStorageService();
-    String? refreshToken = await localStorageService.getToken();
+    final local = LocalStorageService();
+    final refreshToken = await local.getRefreshToken();
 
-    // không có refresh token
     if (refreshToken == null) {
-      _navigateTo(AuthScreen());
+      _navigateTo(const AuthScreen());
       return;
     }
 
-    // gửi yêu cầu cấp token mới
     try {
       final authService = AuthService();
       final authResult = await authService.refreshToken(refreshToken);
 
-      // lưu RT mới vào FSS
-      await localStorageService.saveToken(authResult.refreshToken);
+      // lưu cả access + refresh
+      await local.saveTokens(authResult.accessToken, authResult.refreshToken);
 
-      _navigateTo(MainScreen());
+      _navigateTo(const MainScreen());
     } catch (e) {
-      await localStorageService.clearToken();
-
-      _navigateTo(AuthScreen());
+      await local.clear();
+      _navigateTo(const AuthScreen());
     }
   }
 

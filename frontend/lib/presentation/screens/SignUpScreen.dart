@@ -51,7 +51,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
       final authResult = await authService.signup(signupRequest);
 
       final localStorageService = LocalStorageService();
-      localStorageService.saveToken(authResult.refreshToken);
+      await localStorageService.saveTokens(
+        authResult.accessToken,
+        authResult.refreshToken,
+      );
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -65,7 +68,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => MainScreen()),
+        MaterialPageRoute(builder: (_) => const MainScreen()),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
