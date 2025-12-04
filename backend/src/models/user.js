@@ -45,7 +45,7 @@ const userSchema = new mongoose.Schema(
     },
 
     avatarUrl: { type: String, default: null },
-    avatarId: { type: String, default: null },
+    coverImgUrl: { type: String, default: null },
 
     bio: {
       type: String,

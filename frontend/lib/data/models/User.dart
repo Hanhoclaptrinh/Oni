@@ -7,7 +7,7 @@ class User {
   final String displayName;
   final String? bio;
   final String? avatarUrl;
-  final String? avatarId;
+  final String? coverImgUrl;
   final String role;
   final bool emailVerified;
   final DateTime createdAt;
@@ -19,7 +19,7 @@ class User {
     required this.displayName,
     this.bio,
     this.avatarUrl,
-    this.avatarId,
+    this.coverImgUrl,
     required this.role,
     required this.emailVerified,
     required this.createdAt
@@ -34,7 +34,7 @@ class User {
       displayName: json['displayName'],
       bio: json['bio'],
       avatarUrl: json['avatarUrl'],
-      avatarId: json['avatarId'],
+      coverImgUrl: json['coverImgUrl'],
       role: json['role'],
       emailVerified: json['emailVerified'],
       createdAt: DateTime.parse(json["createdAt"])

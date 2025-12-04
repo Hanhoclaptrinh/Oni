@@ -82,7 +82,7 @@ export const createUserHandler = async (req, res, next) => {
       lastName,
       role,
       avatarUrl,
-      avatarId,
+      coverImgUrl,
       bio,
     } = req.body;
 
@@ -97,7 +97,7 @@ export const createUserHandler = async (req, res, next) => {
       lastName,
       role,
       avatarUrl,
-      avatarId,
+      coverImgUrl,
       bio,
     });
 

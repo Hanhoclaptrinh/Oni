@@ -38,7 +38,7 @@ class ProfileScreen extends ConsumerWidget {
       error: (e, _) => Scaffold(body: Center(child: Text("Lỗi: $e"))),
     );
   }
-  
+
   Widget _buildHeader(BuildContext context, User user) {
     return Stack(
       clipBehavior: Clip.none,
@@ -47,10 +47,11 @@ class ProfileScreen extends ConsumerWidget {
         Container(
           height: 220,
           width: double.infinity,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             image: DecorationImage(
               image: NetworkImage(
-                "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format",
+                user.coverImgUrl ??
+                    "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format",
               ),
               fit: BoxFit.cover,
             ),
@@ -85,9 +86,9 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(width: 8),
             if (user.emailVerified)
-              const Icon(Icons.verified, color: AppColors.primaryBlue)
+              const Icon(Icons.verified_rounded, color: AppColors.primaryBlue)
             else
-              const Icon(Icons.gpp_bad_rounded, color: Colors.orange),
+              const Icon(Icons.gpp_bad_rounded, color: AppColors.deleteRed),
           ],
         ),
         const SizedBox(height: 5),
@@ -112,7 +113,7 @@ class ProfileScreen extends ConsumerWidget {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
-              child: const Text("Edit Profile"),
+              child: const Text("Chỉnh sửa hồ sơ"),
             ),
           ),
           const SizedBox(width: 15),
@@ -137,7 +138,7 @@ class ProfileScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "About Me",
+              "Tiểu sử",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
@@ -156,7 +157,7 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 20),
             _buildInfoRow(
               icon: Icons.calendar_today_rounded,
-              label: "Joined",
+              label: "Đã tham gia vào",
               value: joinedDate,
             ),
           ],

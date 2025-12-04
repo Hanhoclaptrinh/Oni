@@ -52,7 +52,7 @@ export const createUser = async (payload) => {
     lastName,
     role,
     avatarUrl,
-    avatarId,
+    coverImgUrl,
     bio,
   } = payload;
 
@@ -77,7 +77,7 @@ export const createUser = async (payload) => {
     displayName,
     role: role || "user",
     avatarUrl,
-    avatarId,
+    coverImgUrl,
     bio,
   });
 };
