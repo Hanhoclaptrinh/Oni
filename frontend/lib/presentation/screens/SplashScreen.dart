@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/data/services/AuthService.dart';
 import 'package:frontend/data/services/LocalStorageService.dart';
+import 'package:frontend/data/services/SocketService.dart';
 import 'package:frontend/presentation/screens/AuthScreen.dart';
 import 'package:frontend/presentation/screens/MainScreen.dart';
 
@@ -34,6 +35,9 @@ class _SplashScreenState extends State<SplashScreen> {
       // lưu cả access + refresh
       await local.saveTokens(authResult.accessToken, authResult.refreshToken);
 
+      final socketService = SocketService();
+      socketService.connect(authResult.accessToken, authResult.user!.id);
+
       _navigateTo(const MainScreen());
     } catch (e) {
       await local.clear();
@@ -42,7 +46,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _navigateTo(Widget screen) {
-    Future.delayed(Duration(microseconds: 1000), () {
+    Future.delayed(Duration(milliseconds: 1000), () {
       if (mounted) {
         Navigator.pushReplacement(
           context,

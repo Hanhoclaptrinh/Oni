@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/constants/AppColors.dart';
-
-// --- MÀN HÌNH DANH SÁCH CUỘC TRÒ CHUYỆN ---
+import 'package:frontend/presentation/screens/ChatScreen.dart';
 
 class ConversationScreen extends StatelessWidget {
   const ConversationScreen({super.key});
@@ -11,15 +10,14 @@ class ConversationScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       body: CustomScrollView(
-        // <-- SỬ DỤNG CUSTOMSCROLLVIEW
         physics: const BouncingScrollPhysics(
           parent: AlwaysScrollableScrollPhysics(),
         ),
         slivers: <Widget>[
-          // 1. SLIVERAPPBAR: Thay thế cho AppBar tiêu chuẩn
+          // sliver appbar
           _buildSliverAppBar(),
 
-          // 2. SLIVERTOBOXADAPTER: Chứa thanh tìm kiếm (widget tĩnh)
+          // sliver box
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -33,11 +31,10 @@ class ConversationScreen extends StatelessWidget {
             ),
           ),
 
-          // 3. SLIVERLIST: Chứa danh sách các cuộc trò chuyện
+          // sliver list
           SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
               return Padding(
-                // Chỉ thêm padding ngang ở đây, padding dọc đã có trong _buildConversationItem
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: _buildConversationItem(context, chatData[index]),
               );
@@ -45,7 +42,6 @@ class ConversationScreen extends StatelessWidget {
           ),
         ],
       ),
-      // Giữ nguyên FloatingActionButton
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
         backgroundColor: AppColors.primaryBlue,
@@ -55,14 +51,14 @@ class ConversationScreen extends StatelessWidget {
     );
   }
 
-  // Phương thức xây dựng SliverAppBar (Thanh điều hướng cuộn)
+  // xây appbar
   Widget _buildSliverAppBar() {
     return SliverAppBar(
       backgroundColor: Colors.white,
       elevation: 0,
-      pinned: true, // Giữ thanh AppBar ở trên cùng khi cuộn
+      pinned: true,
       floating: false,
-      expandedHeight: 80, // Chiều cao ban đầu
+      expandedHeight: 80,
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: true,
         titlePadding: const EdgeInsets.only(left: 20.0, bottom: 16.0),
@@ -78,7 +74,7 @@ class ConversationScreen extends StatelessWidget {
     );
   }
 
-  // Phương thức xây dựng ô tìm kiếm
+  // ô tìm kiếm
   Widget _buildSearchBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
@@ -121,7 +117,7 @@ class ConversationScreen extends StatelessWidget {
     );
   }
 
-  // Phương thức xây dựng mục hội thoại
+  // list hội thoại
   Widget _buildConversationItem(
     BuildContext context,
     Map<String, dynamic> chat,
@@ -130,7 +126,7 @@ class ConversationScreen extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ChatDetailScreen(user: chat)),
+          MaterialPageRoute(builder: (context) => ChatScreen(user: chat)),
         );
       },
       child: Container(
@@ -175,270 +171,3 @@ class ConversationScreen extends StatelessWidget {
     );
   }
 }
-
-// --- MÀN HÌNH CHI TIẾT CHAT ---
-
-class ChatDetailScreen extends StatelessWidget {
-  final Map<String, dynamic> user;
-  const ChatDetailScreen({super.key, required this.user});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.lightBlueBg,
-      body: Column(
-        children: [
-          // Thanh Header Chat
-          Container(
-            padding: const EdgeInsets.only(
-              top: 50,
-              left: 20,
-              right: 20,
-              bottom: 25,
-            ),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(40)),
-            ),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: const Icon(
-                    Icons.arrow_back_ios_new,
-                    color: Colors.black,
-                  ),
-                ),
-                const SizedBox(width: 15),
-                CircleAvatar(
-                  radius: 22,
-                  backgroundImage: NetworkImage(user['image']),
-                ),
-                const SizedBox(width: 15),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user['name'],
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                      const Text(
-                        "Online",
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.primaryBlue,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Thêm Icons actions nếu cần (vd: Call, Video)
-              ],
-            ),
-          ),
-
-          // Danh sách tin nhắn
-          Expanded(
-            child: ListView.builder(
-              reverse: true, // Cuộn từ dưới lên
-              padding: const EdgeInsets.all(20),
-              physics: const BouncingScrollPhysics(),
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                final message =
-                    messages[messages.length -
-                        1 -
-                        index]; // Đảo ngược index để tin nhắn mới nhất ở dưới
-                final isMe = message['isMe'] as bool;
-                return _buildMessageBubble(message['text'] as String, isMe);
-              },
-            ),
-          ),
-
-          // Ô nhập tin nhắn
-          Container(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
-            color: Colors.transparent,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(25),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: const TextField(
-                      decoration: InputDecoration(
-                        hintText: "Write a message...",
-                        hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Container(
-                  height: 50,
-                  width: 50,
-                  decoration: const BoxDecoration(
-                    color: AppColors.primaryBlue,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.send, color: Colors.white, size: 20),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Phương thức xây dựng Bubble Chat
-  Widget _buildMessageBubble(String text, bool isMe) {
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 5),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        constraints: const BoxConstraints(maxWidth: 250),
-        decoration: BoxDecoration(
-          color: isMe ? AppColors.bubbleBlue : Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: isMe
-                ? const Radius.circular(18)
-                : const Radius.circular(2),
-            topRight: const Radius.circular(18),
-            bottomLeft: const Radius.circular(18),
-            bottomRight: isMe
-                ? const Radius.circular(2)
-                : const Radius.circular(18),
-          ),
-          boxShadow: [
-            if (!isMe)
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.05),
-                blurRadius: 5,
-                offset: const Offset(0, 2),
-              ),
-          ],
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: isMe ? Colors.white : AppColors.textDark,
-            fontSize: 15,
-            height: 1.3,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// --- DỮ LIỆU GIẢ (Mock Data) ---
-final List<Map<String, dynamic>> chatData = [
-  {
-    "name": "Alif Emu",
-    "message": "How your life is going?",
-    "image": "https://i.pravatar.cc/150?img=11",
-  },
-  {
-    "name": "Kabbo Vai",
-    "message": "Wow, that's awesome!",
-    "image": "https://i.pravatar.cc/150?img=12",
-  },
-  {
-    "name": "Md Riyad",
-    "message": "Bye-bye.",
-    "image": "https://i.pravatar.cc/150?img=33",
-  },
-  {
-    "name": "Kowser Jaman",
-    "message": "It's a rainy day.",
-    "image": "https://i.pravatar.cc/150?img=53",
-  },
-  {
-    "name": "Rayhanul",
-    "message": "wow, that's awesome",
-    "image": "https://i.pravatar.cc/150?img=59",
-  },
-
-  {
-    "name": "Sabbir Ahmed",
-    "message": "Are you coming today?",
-    "image": "https://i.pravatar.cc/150?img=21",
-  },
-  {
-    "name": "Nayeem Hasan",
-    "message": "Let’s do it tomorrow.",
-    "image": "https://i.pravatar.cc/150?img=41",
-  },
-  {
-    "name": "Tania Akter",
-    "message": "I'm on the way!",
-    "image": "https://i.pravatar.cc/150?img=24",
-  },
-  {
-    "name": "Shorna Islam",
-    "message": "Don't forget to call me.",
-    "image": "https://i.pravatar.cc/150?img=48",
-  },
-  {
-    "name": "Mahadi Hasan",
-    "message": "See you soon!",
-    "image": "https://i.pravatar.cc/150?img=67",
-  },
-];
-
-final List<Map<String, dynamic>> messages = [
-  {"text": "Hello!", "isMe": false},
-  {"text": "How your life is going?", "isMe": false},
-  {
-    "text":
-        "Pretty good, working on a Flutter project! "
-        "I'm trying to build a chat interface and learning more about state management.",
-    "isMe": true,
-  },
-  {
-    "text":
-        "That sounds cool. Flutter is really powerful. "
-        "What kind of features are you planning to add to your project?",
-    "isMe": false,
-  },
-  {
-    "text":
-        "I'm thinking about adding animations, message reactions, "
-        "and maybe even integrating Firebase for real-time chat.",
-    "isMe": true,
-  },
-  {
-    "text":
-        "Wow, that sounds like a lot! But I'm sure you can do it. "
-        "Firebase works great with Flutter.",
-    "isMe": false,
-  },
-  {
-    "text": "Yeah, I'm excited. Just trying to keep the UI clean and smooth.",
-    "isMe": true,
-  },
-  {
-    "text": "Nice! Let me know if you need help testing anything.",
-    "isMe": false,
-  },
-];

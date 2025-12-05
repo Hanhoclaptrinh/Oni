@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/data/models/SignupRequest.dart';
 import 'package:frontend/data/services/AuthService.dart';
 import 'package:frontend/data/services/LocalStorageService.dart';
+import 'package:frontend/data/services/SocketService.dart';
 import 'package:frontend/presentation/screens/MainScreen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -55,6 +56,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
         authResult.accessToken,
         authResult.refreshToken,
       );
+
+      final socketService = SocketService();
+      socketService.connect(authResult.accessToken, authResult.user!.id);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

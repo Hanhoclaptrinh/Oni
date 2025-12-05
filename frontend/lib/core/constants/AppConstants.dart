@@ -1,3 +1,5 @@
 class AppConstants {
-  static const String baseUrl = "http://172.20.10.2:5000/api/v1";
+  static const String baseHost = "http://192.168.1.5:5000";
+  static const String baseEndpoint = "/api/v1";
+  static const String baseUrl = "$baseHost$baseEndpoint";
 }

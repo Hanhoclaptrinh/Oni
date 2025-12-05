@@ -40,3 +40,13 @@ export const deleteConversationService = async (conversationId) => {
 
   return true;
 };
+
+export const verifyConversationMemberService = async (
+  conversationId,
+  userId
+) => {
+  const conversation = await cvsRepository.findConversationById(conversationId);
+  if (!conversation) return false;
+
+  return conversation.members.includes(userId);
+};

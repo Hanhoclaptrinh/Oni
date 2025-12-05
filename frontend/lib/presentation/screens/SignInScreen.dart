@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/data/models/SigninRequest.dart';
 import 'package:frontend/data/services/AuthService.dart';
 import 'package:frontend/data/services/LocalStorageService.dart';
+import 'package:frontend/data/services/SocketService.dart';
 import 'package:frontend/presentation/screens/MainScreen.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -47,6 +48,9 @@ class _SignInScreenState extends State<SignInScreen> {
         authResult.refreshToken,
       );
 
+      final socketService = SocketService();
+      socketService.connect(authResult.accessToken, authResult.user!.id);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -63,6 +67,7 @@ class _SignInScreenState extends State<SignInScreen> {
         MaterialPageRoute(builder: (_) => MainScreen()),
       );
     } catch (e) {
+      print(e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
