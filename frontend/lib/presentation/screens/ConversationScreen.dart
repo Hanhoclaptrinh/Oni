@@ -10,9 +10,9 @@ class ConversationScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final data = ref.watch(conversationProvider);
+    final conversationsAsync = ref.watch(conversationProvider);
 
-    return data.when(
+    return conversationsAsync.when(
       data: (conversations) {
         return Scaffold(
           backgroundColor: Colors.white,
@@ -138,12 +138,12 @@ class ConversationScreen extends ConsumerWidget {
     // private chat -> dùng otherUser
     final isPrivate = c.type == "private";
     final displayName = isPrivate
-        ? c.otherUser?.displayName ?? "Unknown"
-        : c.name ?? "Group Chat";
+        ? c.otherUser?.displayName ?? "Người lạ"
+        : c.name ?? "Cuộc trò chuyện nhóm";
 
-    final avatar = isPrivate ? c.otherUser?.avatarUrl : c.avatarUrl;
+    final String? avatar = isPrivate ? c.otherUser?.avatarUrl : c.avatarUrl;
 
-    final lastMsg = c.latestMessage?.content ?? "No messages yet";
+    final lastMsg = c.latestMessage?.content ?? "Bắt đầu cuộc trò chuyện";
 
     return GestureDetector(
       onTap: () {
@@ -159,8 +159,12 @@ class ConversationScreen extends ConsumerWidget {
           children: [
             CircleAvatar(
               radius: 28,
-              backgroundImage: avatar != null ? NetworkImage(avatar) : null,
-              child: avatar == null ? Icon(Icons.person) : null,
+              backgroundImage: (avatar != null && avatar.isNotEmpty)
+                  ? NetworkImage(avatar)
+                  : null,
+              child: (avatar == null || avatar.isEmpty)
+                  ? const Icon(Icons.person)
+                  : null,
             ),
             const SizedBox(width: 15),
             Expanded(

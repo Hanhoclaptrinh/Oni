@@ -7,7 +7,7 @@ router.use(protectedRoute);
 
 router.get("/:conversationId", msgController.getMessagesHandler);
 
-router.post("/send", msgController.sendMessageHandler);
+router.post("/:conversationId", msgController.sendMessageHandler);
 
 router.patch("/seen/:conversationId", msgController.markMessagesAsSeenHandler);
 

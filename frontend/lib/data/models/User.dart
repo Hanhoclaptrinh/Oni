@@ -22,22 +22,24 @@ class User {
     this.coverImgUrl,
     required this.role,
     required this.emailVerified,
-    required this.createdAt
+    required this.createdAt,
   });
 
   // lấy dữ liệu từ json và chuyển thành User
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['_id'] ?? json['id'],
-      username: json['username'],
-      email: json['email'],
-      displayName: json['displayName'],
-      bio: json['bio'],
-      avatarUrl: json['avatarUrl'],
+      id: json['_id'] ?? json['id'] ?? "",
+      username: json['username'] ?? "Unknown",
+      email: json['email'] ?? "",
+      displayName: json['displayName'] ?? "",
+      bio: json['bio'] ?? "",
+      avatarUrl: json['avatarUrl'] ?? "",
       coverImgUrl: json['coverImgUrl'],
-      role: json['role'],
-      emailVerified: json['emailVerified'],
-      createdAt: DateTime.parse(json["createdAt"])
+      role: json['role'] ?? "user",
+      emailVerified: json['emailVerified'] ?? false,
+      createdAt: json["createdAt"] != null
+          ? DateTime.parse(json["createdAt"])
+          : DateTime.now(),
     );
   }
 }

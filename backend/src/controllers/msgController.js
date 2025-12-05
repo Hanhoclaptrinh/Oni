@@ -19,7 +19,8 @@ export const getMessagesHandler = async (req, res, next) => {
 export const sendMessageHandler = async (req, res, next) => {
   try {
     const senderId = req.user.id;
-    const { conversationId, type, content, fileUrl } = req.body;
+    const { conversationId } = req.params;
+    const { type, content, fileUrl } = req.body;
     const payload = { type, content, fileUrl };
 
     if (!content && !fileUrl) {
