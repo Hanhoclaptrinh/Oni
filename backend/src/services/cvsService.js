@@ -1,6 +1,25 @@
 import * as cvsRepository from "../repositories/cvsRepository.js";
 import * as error from "../utils/error.js";
 
+export const getMyConversationsService = async (userId) => {
+  if (!userId) throw new error.BadRequestError("thiếu userid");
+
+  const conversations = await cvsRepository.getConversationsOfUser(userId);
+
+  return conversations.map((c) => {
+    let otherUser = null;
+
+    if (c.type === "private") {
+      otherUser = c.members.find((m) => m._id.toString() !== userId.toString());
+    }
+
+    return {
+      ...c,
+      otherUser,
+    };
+  });
+};
+
 export const createPrivateConversationService = async (
   senderId,
   recipientId

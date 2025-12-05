@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/constants/AppColors.dart';
+import 'package:frontend/data/models/Conversation.dart';
+import 'package:frontend/presentation/controllers/ConversationProvider.dart';
 
-class ChatScreen extends StatelessWidget {
-  final Map<String, dynamic> user;
-  const ChatScreen({super.key, required this.user});
+class ChatScreen extends ConsumerWidget {
+  final Conversation conversation;
+  const ChatScreen({super.key, required this.conversation});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final data = ref.watch(conversationProvider);
+
     return Scaffold(
       backgroundColor: AppColors.lightBlueBg,
       body: Column(
@@ -171,61 +176,6 @@ class ChatScreen extends StatelessWidget {
     );
   }
 }
-
-// --- DỮ LIỆU GIẢ (Mock Data) ---
-final List<Map<String, dynamic>> chatData = [
-  {
-    "name": "Alif Emu",
-    "message": "How your life is going?",
-    "image": "https://i.pravatar.cc/150?img=11",
-  },
-  {
-    "name": "Kabbo Vai",
-    "message": "Wow, that's awesome!",
-    "image": "https://i.pravatar.cc/150?img=12",
-  },
-  {
-    "name": "Md Riyad",
-    "message": "Bye-bye.",
-    "image": "https://i.pravatar.cc/150?img=33",
-  },
-  {
-    "name": "Kowser Jaman",
-    "message": "It's a rainy day.",
-    "image": "https://i.pravatar.cc/150?img=53",
-  },
-  {
-    "name": "Rayhanul",
-    "message": "wow, that's awesome",
-    "image": "https://i.pravatar.cc/150?img=59",
-  },
-
-  {
-    "name": "Sabbir Ahmed",
-    "message": "Are you coming today?",
-    "image": "https://i.pravatar.cc/150?img=21",
-  },
-  {
-    "name": "Nayeem Hasan",
-    "message": "Let’s do it tomorrow.",
-    "image": "https://i.pravatar.cc/150?img=41",
-  },
-  {
-    "name": "Tania Akter",
-    "message": "I'm on the way!",
-    "image": "https://i.pravatar.cc/150?img=24",
-  },
-  {
-    "name": "Shorna Islam",
-    "message": "Don't forget to call me.",
-    "image": "https://i.pravatar.cc/150?img=48",
-  },
-  {
-    "name": "Mahadi Hasan",
-    "message": "See you soon!",
-    "image": "https://i.pravatar.cc/150?img=67",
-  },
-];
 
 final List<Map<String, dynamic>> messages = [
   {"text": "Hello!", "isMe": false},

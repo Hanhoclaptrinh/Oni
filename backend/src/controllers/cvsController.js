@@ -1,5 +1,21 @@
 import * as cvsService from "../services/cvsService.js";
 
+export const getMyConversationsHandler = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    const data = await cvsService.getMyConversationsService(userId);
+
+    return res.status(200).json({
+      success: true,
+      message: "lấy danh sách hội thoại thành công",
+      data,
+    });
+  } catch (e) {
+    next(e);
+  }
+};
+
 export const createPrivateConversationHandler = async (req, res, next) => {
   try {
     const senderId = req.user.id;

@@ -1,5 +1,13 @@
 import Conversation from "../models/conversation.js";
 
+// lấy danh sách hội thoại của 1 user
+export const getConversationsOfUser = (userId) =>
+  Conversation.find({ members: userId })
+    .populate("members", "displayName avatarUrl")
+    .populate("latestMessage")
+    .sort({ updatedAt: -1 }) // hội thoại mới nhắn nằm trên cùng
+    .lean();
+
 export const findConversationById = (conversationId) =>
   Conversation.findById(conversationId).lean();
 

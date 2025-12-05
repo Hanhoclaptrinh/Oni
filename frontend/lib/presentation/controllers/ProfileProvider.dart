@@ -3,7 +3,7 @@ import 'package:frontend/data/services/UserService.dart';
 
 final userServiceProvider = Provider<UserService>((ref) => UserService());
 
-final meProvider = FutureProvider((ref) {
+final meProvider = FutureProvider((ref) async {
   final service = ref.watch(userServiceProvider);
   return service.getProfile();
 });

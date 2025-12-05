@@ -1,53 +1,69 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/constants/AppColors.dart';
+import 'package:frontend/data/models/Conversation.dart';
+import 'package:frontend/presentation/controllers/ConversationProvider.dart';
 import 'package:frontend/presentation/screens/ChatScreen.dart';
 
-class ConversationScreen extends StatelessWidget {
+class ConversationScreen extends ConsumerWidget {
   const ConversationScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(
-          parent: AlwaysScrollableScrollPhysics(),
-        ),
-        slivers: <Widget>[
-          // sliver appbar
-          _buildSliverAppBar(),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final data = ref.watch(conversationProvider);
 
-          // sliver box
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Column(
-                children: [
-                  const SizedBox(height: 10),
-                  _buildSearchBar(),
-                  const SizedBox(height: 20),
-                ],
-              ),
+    return data.when(
+      data: (conversations) {
+        return Scaffold(
+          backgroundColor: Colors.white,
+          body: CustomScrollView(
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
             ),
-          ),
+            slivers: <Widget>[
+              // sliver appbar
+              _buildSliverAppBar(),
 
-          // sliver list
-          SliverList(
-            delegate: SliverChildBuilderDelegate((context, index) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: _buildConversationItem(context, chatData[index]),
-              );
-            }, childCount: chatData.length),
+              // sliver box
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 10),
+                      _buildSearchBar(),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+              ),
+
+              // sliver list
+              SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: _buildConversationItem(
+                      context,
+                      conversations[index],
+                    ),
+                  );
+                }, childCount: conversations.length),
+              ),
+            ],
           ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: AppColors.primaryBlue,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add_rounded, color: Colors.white),
-      ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {},
+            backgroundColor: AppColors.primaryBlue,
+            shape: const CircleBorder(),
+            child: const Icon(Icons.add_rounded, color: Colors.white),
+          ),
+        );
+      },
+
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (e, _) => Scaffold(body: Center(child: Text("Lỗi $e"))),
     );
   }
 
@@ -118,15 +134,22 @@ class ConversationScreen extends StatelessWidget {
   }
 
   // list hội thoại
-  Widget _buildConversationItem(
-    BuildContext context,
-    Map<String, dynamic> chat,
-  ) {
+  Widget _buildConversationItem(BuildContext context, Conversation c) {
+    // private chat -> dùng otherUser
+    final isPrivate = c.type == "private";
+    final displayName = isPrivate
+        ? c.otherUser?.displayName ?? "Unknown"
+        : c.name ?? "Group Chat";
+
+    final avatar = isPrivate ? c.otherUser?.avatarUrl : c.avatarUrl;
+
+    final lastMsg = c.latestMessage?.content ?? "No messages yet";
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ChatScreen(user: chat)),
+          MaterialPageRoute(builder: (_) => ChatScreen(conversation: c)),
         );
       },
       child: Container(
@@ -136,8 +159,8 @@ class ConversationScreen extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 28,
-              backgroundImage: NetworkImage(chat['image']),
-              backgroundColor: Colors.grey.shade200,
+              backgroundImage: avatar != null ? NetworkImage(avatar) : null,
+              child: avatar == null ? Icon(Icons.person) : null,
             ),
             const SizedBox(width: 15),
             Expanded(
@@ -145,7 +168,7 @@ class ConversationScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    chat['name'],
+                    displayName,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -154,7 +177,7 @@ class ConversationScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    chat['message'],
+                    lastMsg,
                     style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.textGrey,

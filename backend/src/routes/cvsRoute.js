@@ -5,6 +5,8 @@ const router = express.Router();
 
 router.use(protectedRoute);
 
+router.get("/me", cvsController.getMyConversationsHandler);
+
 router.post("/private", cvsController.createPrivateConversationHandler);
 
 router.post("/group", cvsController.createGroupConversationHandler);
