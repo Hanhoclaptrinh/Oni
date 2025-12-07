@@ -71,7 +71,7 @@ class ChatScreen extends ConsumerWidget {
         children: [
           GestureDetector(
             onTap: () => Navigator.pop(context),
-            child: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+            child: const Icon(Icons.arrow_back_ios_rounded, color: Colors.black),
           ),
           const SizedBox(width: 15),
 

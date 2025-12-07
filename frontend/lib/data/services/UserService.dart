@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:frontend/core/constants/AppConstants.dart';
 import 'package:frontend/data/models/User.dart';
 import 'package:frontend/data/services/AuthService.dart';
-import 'package:frontend/data/services/LocalStorageService.dart';
+import 'package:frontend/data/local/LocalStorageService.dart';
 
 class UserService {
   late Dio _dio;
