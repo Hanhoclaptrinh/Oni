@@ -53,7 +53,10 @@ class ConversationScreen extends ConsumerWidget {
             ],
           ),
           floatingActionButton: FloatingActionButton(
-            onPressed: () {},
+            onPressed: () {
+              /// todo
+              /// tao cuoc tro chuyen nhom
+            },
             backgroundColor: AppColors.primaryBlue,
             shape: const CircleBorder(),
             child: const Icon(Icons.add_rounded, color: Colors.white),

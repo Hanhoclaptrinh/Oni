@@ -3,7 +3,6 @@ import User from "../models/user.js";
 
 export const socketAuth = async (socket, next) => {
   try {
-    // lay token tu client
     const token =
       socket.handshake.auth?.token || socket.handshake.headers?.token;
 
@@ -13,13 +12,19 @@ export const socketAuth = async (socket, next) => {
       return next(err);
     }
 
-    // decode token
     const decoded = jwt.verify(token, process.env.PRIVATE_ACCESS_TOKEN);
 
-    // lay user tu db
-    const user = await User.findById(decoded.id).select(
+    const idToFind = decoded.id || decoded.userId;
+
+    if (!idToFind) {
+      console.error("Token decoded but no id found:", decoded);
+      return next(new Error("INVALID_TOKEN_PAYLOAD"));
+    }
+
+    const user = await User.findById(idToFind).select(
       "_id username displayName avatarUrl"
     );
+
     if (!user) {
       const err = new Error("USER_NOT_FOUND");
       err.data = { msg: "không tìm thấy user" };
@@ -31,8 +36,7 @@ export const socketAuth = async (socket, next) => {
 
     next();
   } catch (e) {
-    console.error("Socket Auth Failed:", err.message);
-
+    console.error("Socket Auth Failed:", e.message);
     const error = new Error("INVALID_TOKEN");
     error.data = { msg: "token không hợp lệ hoặc hết hạn" };
     next(error);

@@ -1,23 +1,74 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:frontend/core/constants/AppColors.dart';
 import 'package:frontend/data/models/Conversation.dart';
+import 'package:frontend/data/models/Message.dart';
+import 'package:frontend/data/services/SocketService.dart';
 import 'package:frontend/presentation/controllers/MessageProvider.dart';
 import 'package:frontend/presentation/controllers/ProfileProvider.dart';
 
-class ChatScreen extends ConsumerWidget {
+class ChatScreen extends ConsumerStatefulWidget {
   final Conversation conversation;
   ChatScreen({super.key, required this.conversation});
 
+  @override
+  ConsumerState<ChatScreen> createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends ConsumerState<ChatScreen> {
+  late IO.Socket socket;
   final TextEditingController _textController = TextEditingController();
 
-  void _handleSend() {
-    print(_textController.value.toString());
+  @override
+  void initState() {
+    super.initState();
+
+    socket = SocketService().socket!;
+
+    // join room
+    socket.emit("join_conversation", widget.conversation.id);
+
+    // listen message
+    socket.on("new_message", (data) {
+      final msg = Message.fromJson(data);
+
+      // chỉ add nếu đúng phòng
+      if (msg.conversationId == widget.conversation.id) {
+        ref
+            .read(messagesProvider(widget.conversation.id).notifier)
+            .addMessage(msg);
+      }
+    });
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final messagesAsync = ref.watch(messagesProvider(conversation.id));
+  void dispose() {
+    // leave room
+    socket.emit("leave_conversation", widget.conversation.id);
+
+    socket.off("new_message");
+    _textController.dispose();
+    super.dispose();
+  }
+
+  // HANDLE SEND MESSAGE
+  void _handleSend() {
+    final text = _textController.text.trim();
+    if (text.isEmpty) return;
+
+    socket.emit("send_message", {
+      "conversationId": widget.conversation.id,
+      "type": "text",
+      "content": text,
+    });
+
+    _textController.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final messagesAsync = ref.watch(messagesProvider(widget.conversation.id));
     final meAsync = ref.watch(meProvider);
 
     return meAsync.when(
@@ -30,9 +81,9 @@ class ChatScreen extends ConsumerWidget {
               backgroundColor: AppColors.lightBlueBg,
               body: Column(
                 children: [
-                  _buildHeader(context, conversation),
+                  _buildHeader(context, widget.conversation),
 
-                  // list tin nhan
+                  // MESSAGE LIST
                   Expanded(
                     child: ListView.builder(
                       reverse: true,
@@ -62,7 +113,7 @@ class ChatScreen extends ConsumerWidget {
     );
   }
 
-  // header
+  // HEADER
   Widget _buildHeader(BuildContext context, Conversation c) {
     final displayName = c.displayNameSafe;
     final avatar = c.finalAvatar;
@@ -104,7 +155,7 @@ class ChatScreen extends ConsumerWidget {
                   ),
                 ),
                 const Text(
-                  "Online",
+                  "online",
                   style: TextStyle(
                     fontSize: 13,
                     color: AppColors.primaryBlue,
@@ -119,7 +170,7 @@ class ChatScreen extends ConsumerWidget {
     );
   }
 
-  // input bar
+  // INPUT BAR
   Widget _buildInputBar() {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
@@ -142,15 +193,16 @@ class ChatScreen extends ConsumerWidget {
               ),
               child: TextField(
                 controller: _textController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: "Nhập tin nhắn...",
-                  hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
                   border: InputBorder.none,
                 ),
               ),
             ),
           ),
           const SizedBox(width: 10),
+
+          // SEND BUTTON
           Container(
             height: 50,
             width: 50,
@@ -160,8 +212,7 @@ class ChatScreen extends ConsumerWidget {
             ),
             child: IconButton(
               onPressed: _handleSend,
-              icon: Icon(Icons.send_rounded),
-              color: Colors.white,
+              icon: const Icon(Icons.send_rounded, color: Colors.white),
               iconSize: 20,
             ),
           ),
@@ -170,7 +221,7 @@ class ChatScreen extends ConsumerWidget {
     );
   }
 
-  // bubble message
+  // MESSAGE BUBBLE
   Widget _buildMessageBubble(String text, bool isMe) {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,

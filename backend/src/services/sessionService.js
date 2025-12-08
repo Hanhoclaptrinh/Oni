@@ -7,9 +7,8 @@ export const getSessionByRefreshToken = async (refreshToken) => {
   );
 
   if (!session)
-    throw (
-      new error() >
-      error.UnauthorizedError("refresh token không hợp lệ hoặc đã bị thu hồi")
+    throw error.UnauthorizedError(
+      "refresh token không hợp lệ hoặc đã bị thu hồi"
     );
 
   if (new Date(session.expiresAt).getTime() < Date.now()) {

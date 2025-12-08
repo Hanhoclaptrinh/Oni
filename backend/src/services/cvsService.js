@@ -67,5 +67,7 @@ export const verifyConversationMemberService = async (
   const conversation = await cvsRepository.findConversationById(conversationId);
   if (!conversation) return false;
 
-  return conversation.members.includes(userId);
+  return conversation.members.some(
+    (memberId) => memberId.toString() === userId.toString()
+  );
 };

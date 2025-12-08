@@ -1,7 +1,7 @@
 import {
   sendMessageService,
   markMessagesAsSeenService,
-} from "../../services/msgService";
+} from "../../services/msgService.js";
 
 export default function registerMessageHandler(io, socket) {
   console.log("message handler loaded for", socket.id);

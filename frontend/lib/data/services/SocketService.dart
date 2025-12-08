@@ -12,6 +12,7 @@ class SocketService {
 
   bool get isConnected => socket != null && socket!.connected;
 
+  // kết nối socket server
   void connect(String token) {
     // ngắt connect nếu có connect từ trước
     if (socket != null && socket!.connected) {
