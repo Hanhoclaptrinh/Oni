@@ -7,7 +7,13 @@ import 'package:frontend/presentation/controllers/ProfileProvider.dart';
 
 class ChatScreen extends ConsumerWidget {
   final Conversation conversation;
-  const ChatScreen({super.key, required this.conversation});
+  ChatScreen({super.key, required this.conversation});
+
+  final TextEditingController _textController = TextEditingController();
+
+  void _handleSend() {
+    print(_textController.value.toString());
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -71,7 +77,10 @@ class ChatScreen extends ConsumerWidget {
         children: [
           GestureDetector(
             onTap: () => Navigator.pop(context),
-            child: const Icon(Icons.arrow_back_ios_rounded, color: Colors.black),
+            child: const Icon(
+              Icons.arrow_back_ios_rounded,
+              color: Colors.black,
+            ),
           ),
           const SizedBox(width: 15),
 
@@ -131,9 +140,10 @@ class ChatScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-              child: const TextField(
+              child: TextField(
+                controller: _textController,
                 decoration: InputDecoration(
-                  hintText: "Viết tin nhắn...",
+                  hintText: "Nhập tin nhắn...",
                   hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
                   border: InputBorder.none,
                 ),
@@ -148,7 +158,12 @@ class ChatScreen extends ConsumerWidget {
               color: AppColors.primaryBlue,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.send, color: Colors.white, size: 20),
+            child: IconButton(
+              onPressed: _handleSend,
+              icon: Icon(Icons.send_rounded),
+              color: Colors.white,
+              iconSize: 20,
+            ),
           ),
         ],
       ),

@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.js";
 
-export default async function socketAuth(socket, next) {
+export const socketAuth = async (socket, next) => {
   try {
     // lay token tu client
     const token =
@@ -37,4 +37,4 @@ export default async function socketAuth(socket, next) {
     error.data = { msg: "token không hợp lệ hoặc hết hạn" };
     next(error);
   }
-}
+};

@@ -49,7 +49,7 @@ class _SignInScreenState extends State<SignInScreen> {
       );
 
       final socketService = SocketService();
-      socketService.connect(authResult.accessToken, authResult.user!.id);
+      socketService.connect(authResult.accessToken);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

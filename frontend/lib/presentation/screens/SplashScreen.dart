@@ -36,7 +36,7 @@ class _SplashScreenState extends State<SplashScreen> {
       await local.saveTokens(authResult.accessToken, authResult.refreshToken);
 
       final socketService = SocketService();
-      socketService.connect(authResult.accessToken, authResult.user!.id);
+      socketService.connect(authResult.accessToken);
 
       _navigateTo(const MainScreen());
     } catch (e) {

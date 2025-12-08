@@ -9,7 +9,8 @@ export default function registerMessageHandler(io, socket) {
   // gui tin nhan
   socket.on("send_message", async (payload) => {
     try {
-      const { conversationId, senderId, type, content, fileUrl } = payload;
+      const { conversationId, type, content, fileUrl } = payload;
+      const senderId = socket.userId; // lấy từ middleware
 
       if (!conversationId || !senderId) {
         return socket.emit("error_message", "thiếu dữ liệu tin nhắn");
@@ -35,7 +36,8 @@ export default function registerMessageHandler(io, socket) {
   });
 
   // danh dau da seen
-  socket.on("seen_messages", async ({ conversationId, userId }) => {
+  socket.on("seen_messages", async ({ conversationId }) => {
+    const userId = socket.userId; // lấy từ middleware
     try {
       if (!conversationId || !userId) return;
 
