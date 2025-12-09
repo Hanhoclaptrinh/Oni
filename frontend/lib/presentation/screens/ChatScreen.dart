@@ -52,7 +52,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.dispose();
   }
 
-  // HANDLE SEND MESSAGE
+  // handle send
   void _handleSend() {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
@@ -83,7 +83,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 children: [
                   _buildHeader(context, widget.conversation),
 
-                  // MESSAGE LIST
+                  // message list
                   Expanded(
                     child: ListView.builder(
                       reverse: true,
@@ -113,7 +113,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  // HEADER
+  // header
   Widget _buildHeader(BuildContext context, Conversation c) {
     final displayName = c.displayNameSafe;
     final avatar = c.finalAvatar;
@@ -170,7 +170,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  // INPUT BAR
+  // input bar
   Widget _buildInputBar() {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
@@ -202,7 +202,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
           const SizedBox(width: 10),
 
-          // SEND BUTTON
+          // send button
           Container(
             height: 50,
             width: 50,
@@ -221,7 +221,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  // MESSAGE BUBBLE
+  // message bubble
   Widget _buildMessageBubble(String text, bool isMe) {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,

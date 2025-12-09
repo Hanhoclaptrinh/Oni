@@ -23,7 +23,6 @@ export default function registerConversationHandler(io, socket) {
 
       socket.join(conversationId);
 
-      socket.emit("joined_conversation", conversationId);
       console.log(`User ${userId} joined room ${conversationId}`);
     } catch (err) {
       console.error("join_conversation:", err.message);
