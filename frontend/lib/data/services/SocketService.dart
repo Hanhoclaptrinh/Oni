@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:frontend/core/constants/AppConstants.dart';
 import 'package:logger/logger.dart';
@@ -6,46 +7,46 @@ class SocketService {
   static final SocketService _instance = SocketService._internal();
   IO.Socket? socket;
 
+  final friendOnline = StreamController<String>.broadcast();
+  final friendOffline = StreamController<String>.broadcast();
+
   factory SocketService() => _instance;
 
   SocketService._internal();
 
-  bool get isConnected => socket != null && socket!.connected;
-
-  // kết nối socket server
   void connect(String token) {
-    // ngắt connect nếu có connect từ trước
-    if (socket != null && socket!.connected) {
+    if (socket != null) {
       socket!.disconnect();
+      socket!.dispose();
     }
 
-    // setup socket connection
     socket = IO.io(
       AppConstants.baseHost,
       IO.OptionBuilder()
           .setTransports(["websocket"])
-          .enableAutoConnect()
+          .disableAutoConnect()
           .setAuth({"token": token})
           .build(),
     );
 
     socket!.onConnect((_) {
-      Logger().i("Connect thành công");
+      Logger().i("Socket connected");
+    });
+
+    socket!.on("user_online", (uid) {
+      Logger().i("FE RECEIVED user_online: $uid");
+      friendOnline.add(uid.toString());
+    });
+
+    socket!.on("user_offline", (uid) {
+      Logger().i("FE RECEIVED user_offline: $uid");
+      friendOffline.add(uid.toString());
     });
 
     socket!.onDisconnect((_) {
       Logger().i("Socket disconnected");
     });
 
-    socket!.onConnectError((e) {
-      Logger().e("Connect thất bại $e");
-    });
-
-    socket!.onError((e) {
-      Logger().e("Socket error $e");
-    });
-
-    // connect socket
     socket!.connect();
   }
 }

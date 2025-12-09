@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/constants/AppColors.dart';
+import 'package:frontend/presentation/controllers/SocketProvider.dart';
 import 'package:frontend/presentation/screens/ConversationScreen.dart';
 import 'package:frontend/presentation/screens/FriendScreen.dart';
 import 'package:frontend/presentation/screens/ProfileScreen.dart';
 
-class MainScreen extends StatefulWidget {
+class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  ConsumerState<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends ConsumerState<MainScreen> {
   final PageController _pageController = PageController(initialPage: 0);
   int _pageIndex = 0;
 
@@ -36,6 +38,8 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(presenceListenerProvider);
+
     return Scaffold(
       body: SafeArea(
         child: PageView(

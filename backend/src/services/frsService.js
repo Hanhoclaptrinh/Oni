@@ -3,6 +3,21 @@ import * as error from "../utils/error.js";
 
 const compareId = (id1, id2) => id1.toString() === id2.toString();
 
+// tìm bạn
+export const getFriendIdsOfUser = async (userId) => {
+  const list = await frsRepository.findAllFriends(userId);
+
+  const friendIds = list.map((rel) => {
+    if (rel.requester._id.toString() === userId.toString()) {
+      return rel.recipient._id.toString();
+    }
+
+    return rel.requester._id.toString();
+  });
+
+  return friendIds;
+};
+
 // gửi lời mời kb
 export const createFriendRequestService = async (requesterId, recipientId) => {
   if (compareId(requesterId, recipientId))

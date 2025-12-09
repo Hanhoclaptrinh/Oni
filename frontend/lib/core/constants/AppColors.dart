@@ -9,4 +9,5 @@ class AppColors {
   static const Color lightGreyBackground = Color(0xFFF2F2F7);
   static const Color bubbleBlue = Color(0xFF63D2FF);
   static const Color scaffoldBg = Color(0xFFF9FAFB);
+  static const Color onlineGreen = Color(0xFF31C24B);
 }

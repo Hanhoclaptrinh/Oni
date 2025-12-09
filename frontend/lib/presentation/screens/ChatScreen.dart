@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/presentation/controllers/SocketProvider.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:frontend/core/constants/AppColors.dart';
 import 'package:frontend/data/models/Conversation.dart';
@@ -70,6 +71,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     final messagesAsync = ref.watch(messagesProvider(widget.conversation.id));
     final meAsync = ref.watch(meProvider);
+    final presenceMap = ref.watch(presenceProvider);
+    final isOnline = presenceMap[widget.conversation.otherUser?.id];
+
+    print(presenceMap);
+
+    print(widget.conversation.otherUser!.id);
 
     return meAsync.when(
       data: (me) {
@@ -81,7 +88,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               backgroundColor: AppColors.lightBlueBg,
               body: Column(
                 children: [
-                  _buildHeader(context, widget.conversation),
+                  _buildHeader(context, widget.conversation, isOnline),
 
                   // message list
                   Expanded(
@@ -114,7 +121,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   // header
-  Widget _buildHeader(BuildContext context, Conversation c) {
+  Widget _buildHeader(BuildContext context, Conversation c, bool? isOnline) {
     final displayName = c.displayNameSafe;
     final avatar = c.finalAvatar;
 
@@ -154,11 +161,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     color: AppColors.textDark,
                   ),
                 ),
-                const Text(
-                  "online",
+                Text(
+                  isOnline == true ? "Online" : "Offline",
                   style: TextStyle(
                     fontSize: 13,
-                    color: AppColors.primaryBlue,
+                    color: isOnline == true
+                        ? AppColors.onlineGreen
+                        : AppColors.textGrey,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

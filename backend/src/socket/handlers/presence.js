@@ -3,6 +3,10 @@ import {
   setOfflineSessionService,
 } from "../../services/skssService.js";
 
+import { getFriendIdsOfUser } from "../../services/frsService.js";
+
+import Conversation from "../../models/conversation.js";
+
 export default function registerPresenceHandler(io, socket) {
   console.log("presence handler loaded for", socket.id);
 
@@ -17,10 +21,30 @@ export default function registerPresenceHandler(io, socket) {
       // Lưu session
       await createSocketSessionService(userId, socket.id);
 
-      console.log(`User ${userId} online via socket ${socket.id}`);
+      // khi đã là bạn
+      const friendIds = await getFriendIdsOfUser(userId);
 
-      // emit cho bạn bè
-      // io.to(friendId).emit("friend_online", userId);
+      // khi không là bạn - cho phép người lạ nhắn tin nhau
+      const convos = await Conversation.find({ members: userId })
+        .select("members")
+        .lean();
+
+      const participants = convos
+        .flatMap((c) =>
+          c.members.filter((m) => m.toString() !== userId.toString())
+        )
+        .map((id) => id.toString());
+
+      const notifyIds = [...new Set([...friendIds, ...participants])];
+
+      if (notifyIds.length > 0) {
+        console.log("notifyIds:", notifyIds);
+        console.log("EMIT user_online to:", notifyIds);
+
+        io.to(notifyIds).emit("user_online", userId);
+      }
+
+      console.log(`User ${userId} online via socket ${socket.id}`);
     } catch (err) {
       console.error("Error presence:init:", err.message);
     }
@@ -31,10 +55,27 @@ export default function registerPresenceHandler(io, socket) {
     try {
       await setOfflineSessionService(socket.id);
 
-      console.log(`User ${userId} disconnected`);
+      // khi đã là bạn
+      const friendIds = await getFriendIdsOfUser(userId);
 
-      // emit cho bạn bè
-      // io.to(friendId).emit("friend_offline", userId);
+      // khi không là bạn - cho phép người lạ nhắn tin nhau
+      const convos = await Conversation.find({ members: userId })
+        .select("members")
+        .lean();
+
+      const participants = convos
+        .flatMap((c) =>
+          c.members.filter((m) => m.toString() !== userId.toString())
+        )
+        .map((id) => id.toString());
+
+      const notifyIds = [...new Set([...friendIds, ...participants])];
+
+      if (notifyIds.length > 0) {
+        io.to(notifyIds).emit("user_offline", userId);
+      }
+
+      console.log(`User ${userId} disconnected`);
     } catch (err) {
       console.error("Error presence:disconnect:", err.message);
     }
