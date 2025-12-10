@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import SocketSession from "../models/socketsession.js";
 
 export const insertSocketSession = (userId, socketId) =>
@@ -33,3 +34,18 @@ export const updateLastActive = (socketId) =>
     { lastActive: new Date() },
     { new: true }
   );
+
+export const findOnlineUsersByIds = (userIds) => {
+  // Convert string userIds to ObjectIds for MongoDB query
+  const objectIds = userIds.map((id) => {
+    if (typeof id === "string") {
+      return new mongoose.Types.ObjectId(id);
+    }
+    return id;
+  });
+
+  return SocketSession.distinct("userId", {
+    userId: { $in: objectIds },
+    isOnline: true,
+  });
+};

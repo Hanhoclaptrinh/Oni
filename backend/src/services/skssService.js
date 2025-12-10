@@ -42,3 +42,8 @@ export const updateLastActiveService = async (socketId) => {
 export const findOnlineUsersService = async () => {
   return skssRepository.findOnlineUsers();
 };
+
+export const findOnlineUsersByIdsService = async (userIds) => {
+  if (!userIds || userIds.length === 0) return [];
+  return skssRepository.findOnlineUsersByIds(userIds);
+};

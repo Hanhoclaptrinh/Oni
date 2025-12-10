@@ -7,23 +7,31 @@ final presenceProvider = StateProvider<Map<String, bool>>((ref) => {});
 final presenceListenerProvider = Provider<void>((ref) {
   final socket = SocketService();
 
-  // online
-  final sub1 = socket.friendOnline.stream.listen((uid) {
+  final subOnline = socket.friendOnline.listen((uid) {
     final current = ref.read(presenceProvider);
-    final updated = {...current, uid: true};
-    ref.read(presenceProvider.notifier).state = updated;
+    ref.read(presenceProvider.notifier).state = {...current, uid: true};
   });
 
-  // offline
-  final sub2 = socket.friendOffline.stream.listen((uid) {
+  final subOffline = socket.friendOffline.listen((uid) {
     final current = ref.read(presenceProvider);
-    final updated = {...current, uid: false};
-    ref.read(presenceProvider.notifier).state = updated;
+    ref.read(presenceProvider.notifier).state = {...current, uid: false};
   });
 
-  // dispose
+  final subInitialPresence = socket.initialPresence.listen((onlineUserIds) {
+    final current = ref.read(presenceProvider);
+    final updatedPresence = Map<String, bool>.from(current);
+
+    // cập nhật trạng thái online cho tất cả user trong danh sách
+    for (final uid in onlineUserIds) {
+      updatedPresence[uid] = true;
+    }
+
+    ref.read(presenceProvider.notifier).state = updatedPresence;
+  });
+
   ref.onDispose(() {
-    sub1.cancel();
-    sub2.cancel();
+    subOnline.cancel();
+    subOffline.cancel();
+    subInitialPresence.cancel();
   });
 });

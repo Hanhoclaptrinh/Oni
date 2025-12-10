@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/constants/AppColors.dart';
-import 'package:frontend/presentation/controllers/SocketProvider.dart';
 import 'package:frontend/presentation/screens/ConversationScreen.dart';
 import 'package:frontend/presentation/screens/FriendScreen.dart';
 import 'package:frontend/presentation/screens/ProfileScreen.dart';
@@ -38,8 +37,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(presenceListenerProvider);
-
     return Scaffold(
       body: SafeArea(
         child: PageView(
@@ -48,7 +45,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           children: [
             Center(child: Text("Home Screen")),
             FriendScreen(),
-            Center(child: Text("Post Screen")),
             ConversationScreen(),
             ProfileScreen(),
           ],
@@ -71,10 +67,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             BottomNavigationBarItem(
               icon: Icon(Icons.search_rounded),
               label: 'Friend',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.add_box_rounded),
-              label: 'Post',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.chat_bubble_rounded),

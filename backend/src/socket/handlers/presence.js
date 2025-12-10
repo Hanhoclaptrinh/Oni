@@ -1,6 +1,7 @@
 import {
   createSocketSessionService,
   setOfflineSessionService,
+  findOnlineUsersByIdsService,
 } from "../../services/skssService.js";
 
 import { getFriendIdsOfUser } from "../../services/frsService.js";
@@ -44,6 +45,22 @@ export default function registerPresenceHandler(io, socket) {
         io.to(notifyIds).emit("user_online", userId);
       }
 
+      // gửi danh sách bạn/participants đang online cho user mới kết nối
+      if (notifyIds.length > 0) {
+        const onlineUsers = await findOnlineUsersByIdsService(notifyIds);
+        const onlineUserIds = onlineUsers.map((id) => id.toString());
+
+        if (onlineUserIds.length > 0) {
+          console.log(
+            "EMIT initial_presence to user:",
+            userId,
+            "online users:",
+            onlineUserIds
+          );
+          socket.emit("initial_presence", onlineUserIds);
+        }
+      }
+
       console.log(`User ${userId} online via socket ${socket.id}`);
     } catch (err) {
       console.error("Error presence:init:", err.message);
@@ -79,5 +96,10 @@ export default function registerPresenceHandler(io, socket) {
     } catch (err) {
       console.error("Error presence:disconnect:", err.message);
     }
+  });
+
+  socket.on("join_user_room", (uid) => {
+    socket.join(uid);
+    console.log("Joined user room:", uid);
   });
 }

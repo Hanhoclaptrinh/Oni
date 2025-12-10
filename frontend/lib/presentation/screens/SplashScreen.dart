@@ -16,32 +16,44 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAuthStatus();
+    _handleStartUp();
   }
 
-  Future<void> _checkAuthStatus() async {
-    final local = LocalStorageService();
-    final refreshToken = await local.getRefreshToken();
+  Future<void> _handleStartUp() async {
+    final minDelay = Future.delayed(const Duration(milliseconds: 1500));
 
-    if (refreshToken == null) {
+    final process = _processAuthLogic();
+
+    await Future.wait([minDelay, process]);
+  }
+
+  Future<void> _processAuthLogic() async {
+    final local = LocalStorageService();
+    final refrshTkn = await local.getRefreshToken();
+
+    if (refrshTkn == null) {
       _navigateTo(const AuthScreen());
       return;
     }
 
     try {
       final authService = AuthService();
-      final authResult = await authService.refreshToken(refreshToken);
+      final authResult = await authService.refreshToken(refrshTkn);
 
       // lưu cả access + refresh
       await local.saveTokens(authResult.accessToken, authResult.refreshToken);
 
-      final socketService = SocketService();
-      socketService.connect(authResult.accessToken);
+      SocketService().connect(authResult.accessToken);
 
-      _navigateTo(const MainScreen());
+      if (mounted) {
+        _navigateTo(const MainScreen());
+      }
     } catch (e) {
       await local.clear();
-      _navigateTo(const AuthScreen());
+      SocketService().disconnect();
+      if (mounted) {
+        _navigateTo(const AuthScreen());
+      }
     }
   }
 
@@ -59,10 +71,26 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Center(
-        child: Text(
-          "oni.",
-          style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "oni.",
+              style: TextStyle(
+                fontSize: 50,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 20),
+            const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ],
         ),
       ),
     );

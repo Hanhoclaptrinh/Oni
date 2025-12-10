@@ -4,6 +4,7 @@ import 'package:frontend/data/services/AuthService.dart';
 import 'package:frontend/data/local/LocalStorageService.dart';
 import 'package:frontend/data/services/SocketService.dart';
 import 'package:frontend/presentation/screens/MainScreen.dart';
+import 'package:logger/logger.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -67,7 +68,7 @@ class _SignInScreenState extends State<SignInScreen> {
         MaterialPageRoute(builder: (_) => MainScreen()),
       );
     } catch (e) {
-      print(e);
+      Logger().e("Lỗi $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(

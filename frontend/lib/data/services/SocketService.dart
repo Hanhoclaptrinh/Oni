@@ -7,19 +7,19 @@ class SocketService {
   static final SocketService _instance = SocketService._internal();
   IO.Socket? socket;
 
-  final friendOnline = StreamController<String>.broadcast();
-  final friendOffline = StreamController<String>.broadcast();
-
   factory SocketService() => _instance;
 
   SocketService._internal();
 
-  void connect(String token) {
-    if (socket != null) {
-      socket!.disconnect();
-      socket!.dispose();
-    }
+  final _friendOnlineController = StreamController<String>.broadcast();
+  final _friendOfflineController = StreamController<String>.broadcast();
+  final _initialPresenceController = StreamController<List<String>>.broadcast();
 
+  Stream<String> get friendOnline => _friendOnlineController.stream;
+  Stream<String> get friendOffline => _friendOfflineController.stream;
+  Stream<List<String>> get initialPresence => _initialPresenceController.stream;
+
+  void connect(String token, {String? myId}) {
     socket = IO.io(
       AppConstants.baseHost,
       IO.OptionBuilder()
@@ -31,22 +31,44 @@ class SocketService {
 
     socket!.onConnect((_) {
       Logger().i("Socket connected");
-    });
 
-    socket!.on("user_online", (uid) {
-      Logger().i("FE RECEIVED user_online: $uid");
-      friendOnline.add(uid.toString());
-    });
+      if (myId != null) {
+        socket!.emit("join_user_room", myId);
+        Logger().i("joined user room: $myId");
+      }
 
-    socket!.on("user_offline", (uid) {
-      Logger().i("FE RECEIVED user_offline: $uid");
-      friendOffline.add(uid.toString());
-    });
+      socket!.on("user_online", (uid) {
+        Logger().i("user_online event: $uid");
+        _friendOnlineController.add(uid.toString());
+      });
 
-    socket!.onDisconnect((_) {
-      Logger().i("Socket disconnected");
+      socket!.on("user_offline", (uid) {
+        Logger().i("user_offline event: $uid");
+        _friendOfflineController.add(uid.toString());
+      });
+
+      socket!.on("initial_presence", (data) {
+        Logger().i("initial_presence event: $data");
+        if (data is List) {
+          final onlineUserIds = data.map((uid) => uid.toString()).toList();
+          _initialPresenceController.add(onlineUserIds);
+        }
+      });
     });
 
     socket!.connect();
+  }
+
+  void disconnect() {
+    socket?.disconnect();
+    socket?.dispose();
+    socket = null;
+  }
+
+  void dispose() {
+    disconnect();
+    _friendOnlineController.close();
+    _friendOfflineController.close();
+    _initialPresenceController.close();
   }
 }

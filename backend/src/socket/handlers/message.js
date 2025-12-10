@@ -13,7 +13,7 @@ export default function registerMessageHandler(io, socket) {
       const senderId = socket.userId; // lấy từ middleware
 
       if (!conversationId || !senderId) {
-        return socket.emit("error_message", "thiếu dữ liệu tin nhắn");
+        console.log("thiếu dữ liệu tin nhắn");
       }
 
       // luu tin nhan vao db

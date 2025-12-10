@@ -74,10 +74,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final presenceMap = ref.watch(presenceProvider);
     final isOnline = presenceMap[widget.conversation.otherUser?.id];
 
-    print(presenceMap);
-
-    print(widget.conversation.otherUser!.id);
-
     return meAsync.when(
       data: (me) {
         final myId = me.id;

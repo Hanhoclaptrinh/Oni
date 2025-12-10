@@ -4,6 +4,7 @@ import 'package:frontend/data/services/AuthService.dart';
 import 'package:frontend/data/local/LocalStorageService.dart';
 import 'package:frontend/data/services/SocketService.dart';
 import 'package:frontend/presentation/screens/MainScreen.dart';
+import 'package:logger/logger.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -75,10 +76,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
         MaterialPageRoute(builder: (_) => const MainScreen()),
       );
     } catch (e) {
+      Logger().e("Lỗi $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Đăng ký thất bại $e',
+            'Đăng ký thất bại',
             style: const TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.red,
