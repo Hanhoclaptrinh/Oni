@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/models/SigninRequest.dart';
-import 'package:frontend/data/services/AuthService.dart';
 import 'package:frontend/data/local/LocalStorageService.dart';
 import 'package:frontend/data/services/SocketService.dart';
+import 'package:frontend/presentation/controllers/AuthProvider.dart';
 import 'package:frontend/presentation/screens/MainScreen.dart';
 import 'package:logger/logger.dart';
 
-class SignInScreen extends StatefulWidget {
+class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({super.key});
 
   @override
-  State<SignInScreen> createState() => _SignInScreenState();
+  ConsumerState<SignInScreen> createState() => _SignInScreenState();
 }
 
-class _SignInScreenState extends State<SignInScreen> {
+class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _emailController = TextEditingController();
@@ -34,23 +35,21 @@ class _SignInScreenState extends State<SignInScreen> {
       return;
     }
 
-    final signinRequest = SigninRequest(
+    final req = SigninRequest(
       email: _emailController.text.trim(),
       password: _passwordController.text.trim(),
     );
 
     try {
-      final authService = AuthService();
-      final authResult = await authService.signin(signinRequest);
+      final auth = ref.read(authServiceProvider);
+      final result = await auth.signin(req);
 
-      final localStorageService = LocalStorageService();
-      await localStorageService.saveTokens(
-        authResult.accessToken,
-        authResult.refreshToken,
+      await LocalStorageService().saveTokens(
+        result.accessToken,
+        result.refreshToken,
       );
 
-      final socketService = SocketService();
-      socketService.connect(authResult.accessToken);
+      SocketService().connect(result.accessToken);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

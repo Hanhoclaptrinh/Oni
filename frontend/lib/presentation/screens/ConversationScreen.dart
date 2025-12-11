@@ -10,7 +10,7 @@ class ConversationScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final conversationsAsync = ref.watch(conversationProvider);
+    final conversationsAsync = ref.watch(cvsProvider);
 
     return conversationsAsync.when(
       data: (conversations) {

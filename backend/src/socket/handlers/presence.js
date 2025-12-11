@@ -69,6 +69,7 @@ export default function registerPresenceHandler(io, socket) {
 
   // disconnect
   socket.on("disconnect", async () => {
+    console.log("DISCONNECT:", socket.id);
     try {
       await setOfflineSessionService(socket.id);
 

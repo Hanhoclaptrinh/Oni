@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/constants/AppColors.dart';
+import 'package:frontend/data/local/LocalStorageService.dart';
+import 'package:frontend/data/services/SocketService.dart';
+import 'package:frontend/presentation/controllers/UserProvider.dart';
 import 'package:frontend/presentation/screens/ConversationScreen.dart';
 import 'package:frontend/presentation/screens/FriendScreen.dart';
 import 'package:frontend/presentation/screens/ProfileScreen.dart';
@@ -15,6 +18,18 @@ class MainScreen extends ConsumerStatefulWidget {
 class _MainScreenState extends ConsumerState<MainScreen> {
   final PageController _pageController = PageController(initialPage: 0);
   int _pageIndex = 0;
+
+  bool _socketInit = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // load user info
+    Future.microtask(() {
+      ref.read(userProvider);
+    });
+  }
 
   // xử lý chọn bottom item
   void _onItemTapped(int index) {
@@ -37,6 +52,23 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final meAsync = ref.watch(userProvider);
+
+    meAsync.whenOrNull(
+      data: (me) {
+        if (!_socketInit) {
+          _socketInit = true;
+
+          // lấy token để connect socket
+          LocalStorageService().getAccessToken().then((token) {
+            if (token != null) {
+              SocketService().connect(token);
+            }
+          });
+        }
+      },
+    );
+
     return Scaffold(
       body: SafeArea(
         child: PageView(

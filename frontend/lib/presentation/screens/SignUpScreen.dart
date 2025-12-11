@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/models/SignupRequest.dart';
-import 'package:frontend/data/services/AuthService.dart';
 import 'package:frontend/data/local/LocalStorageService.dart';
 import 'package:frontend/data/services/SocketService.dart';
+import 'package:frontend/presentation/controllers/AuthProvider.dart';
 import 'package:frontend/presentation/screens/MainScreen.dart';
 import 'package:logger/logger.dart';
 
-class SignUpScreen extends StatefulWidget {
+class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  ConsumerState<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _firstNameController = TextEditingController();
@@ -36,11 +37,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   // xử lý đăng ký
   Future<void> _handleSignUp() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
-    final signupRequest = SignupRequest(
+    final req = SignupRequest(
       username: _usernameController.text.trim(),
       email: _emailController.text.trim(),
       password: _passwordController.text.trim(),
@@ -49,40 +48,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
 
     try {
-      final authService = AuthService();
-      final authResult = await authService.signup(signupRequest);
+      final auth = ref.read(authServiceProvider);
+      final result = await auth.signup(req);
 
-      final localStorageService = LocalStorageService();
-      await localStorageService.saveTokens(
-        authResult.accessToken,
-        authResult.refreshToken,
+      await LocalStorageService().saveTokens(
+        result.accessToken,
+        result.refreshToken,
       );
 
-      final socketService = SocketService();
-      socketService.connect(authResult.accessToken);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Đăng ký thành công',
-            style: const TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
+      SocketService().connect(result.accessToken);
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const MainScreen()),
       );
     } catch (e) {
-      Logger().e("Lỗi $e");
+      Logger().e(e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Đăng ký thất bại',
-            style: const TextStyle(color: Colors.white),
-          ),
+          content: Text("Đăng ký thất bại"),
           backgroundColor: Colors.red,
         ),
       );

@@ -4,6 +4,9 @@ import * as error from "../utils/error.js";
 export const createSocketSessionService = async (userId, socketId) => {
   if (!userId) throw new error.BadRequestError("thiếu userid");
 
+  // xóa toàn bộ ss cũ của user tránh online ảo
+  await skssRepository.deleteAllSessionsOfUser(userId);
+
   // xóa session cũ theo socketId (tránh ghost session)
   await skssRepository.deleteSocketSession(socketId);
 

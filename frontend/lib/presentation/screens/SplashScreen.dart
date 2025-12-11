@@ -1,76 +1,65 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/data/services/AuthService.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/local/LocalStorageService.dart';
-import 'package:frontend/data/services/SocketService.dart';
+import 'package:frontend/presentation/controllers/AuthProvider.dart';
 import 'package:frontend/presentation/screens/AuthScreen.dart';
 import 'package:frontend/presentation/screens/MainScreen.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _handleStartUp();
+    _handleStartup();
   }
 
-  Future<void> _handleStartUp() async {
-    final minDelay = Future.delayed(const Duration(milliseconds: 1500));
-
-    final process = _processAuthLogic();
-
-    await Future.wait([minDelay, process]);
+  Future<void> _handleStartup() async {
+    await Future.wait([
+      Future.delayed(const Duration(milliseconds: 1500)),
+      _processLogic(),
+    ]);
   }
 
-  Future<void> _processAuthLogic() async {
+  Future<void> _processLogic() async {
     final local = LocalStorageService();
-    final refrshTkn = await local.getRefreshToken();
+    final refreshToken = await local.getRefreshToken();
 
-    if (refrshTkn == null) {
-      _navigateTo(const AuthScreen());
+    if (refreshToken == null) {
+      _goTo(const AuthScreen());
       return;
     }
 
     try {
-      final authService = AuthService();
-      final authResult = await authService.refreshToken(refrshTkn);
+      final authService = ref.read(authServiceProvider);
+      final result = await authService.refreshToken(refreshToken);
 
-      // lưu cả access + refresh
-      await local.saveTokens(authResult.accessToken, authResult.refreshToken);
+      await local.saveTokens(result.accessToken, result.refreshToken);
 
-      SocketService().connect(authResult.accessToken);
-
-      if (mounted) {
-        _navigateTo(const MainScreen());
-      }
+      _goTo(const MainScreen());
     } catch (e) {
       await local.clear();
-      SocketService().disconnect();
-      if (mounted) {
-        _navigateTo(const AuthScreen());
-      }
+      _goTo(const AuthScreen());
     }
   }
 
-  void _navigateTo(Widget screen) {
-    Future.delayed(Duration(milliseconds: 1000), () {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => screen),
-        );
-      }
-    });
+  void _goTo(Widget screen) {
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => screen),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       backgroundColor: Colors.white,
       body: Center(
         child: Column(

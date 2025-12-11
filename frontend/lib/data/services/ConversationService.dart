@@ -1,29 +1,14 @@
 import 'package:dio/dio.dart';
-import 'package:frontend/core/constants/AppConstants.dart';
 import 'package:frontend/data/models/Conversation.dart';
-import 'package:frontend/data/local/LocalStorageService.dart';
 
 class ConversationService {
-  final Dio _dio = Dio(BaseOptions(baseUrl: AppConstants.baseUrl));
+  final Dio dio;
 
-  static const _myConversationUrl = "/conversations/me";
+  ConversationService(this.dio);
 
   Future<List<Conversation>> getMyConversations() async {
-    try {
-      final token = await LocalStorageService().getAccessToken();
-
-      final res = await _dio.get(
-        _myConversationUrl,
-        options: Options(headers: {
-          "Authorization": "Bearer $token",
-        })
-      );
-
-      final data = res.data["data"] as List;
-
-      return data.map((cvs) => Conversation.fromJson(cvs)).toList();
-    } catch (e) {
-      rethrow;
-    }
+    final res = await dio.get("/conversations/me");
+    final list = res.data["data"] as List;
+    return list.map((e) => Conversation.fromJson(e)).toList();
   }
 }

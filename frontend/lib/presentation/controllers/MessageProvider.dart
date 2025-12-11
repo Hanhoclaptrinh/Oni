@@ -2,10 +2,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:frontend/data/models/Message.dart';
 import 'package:frontend/data/services/MessageService.dart';
+import 'package:frontend/presentation/controllers/DioProvider.dart';
 
-final msgServiceProvider = Provider((ref) => MessageService());
+final msgServiceProvider = Provider((ref) {
+  final dio = ref.watch(dioProvider);
+  return MessageService(dio);
+});
 
-final messagesProvider =
+final msgProvider =
     StateNotifierProvider.family<
       MessageNotifier,
       AsyncValue<List<Message>>,

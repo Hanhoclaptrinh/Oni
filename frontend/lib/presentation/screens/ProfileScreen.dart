@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/models/User.dart';
-import 'package:frontend/presentation/controllers/ProfileProvider.dart';
+import 'package:frontend/presentation/controllers/UserProvider.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/core/constants/AppColors.dart';
 
@@ -10,7 +10,7 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final me = ref.watch(meProvider);
+    final me = ref.watch(userProvider);
 
     return me.when(
       data: (user) {

@@ -7,7 +7,7 @@ import 'package:frontend/data/models/Conversation.dart';
 import 'package:frontend/data/models/Message.dart';
 import 'package:frontend/data/services/SocketService.dart';
 import 'package:frontend/presentation/controllers/MessageProvider.dart';
-import 'package:frontend/presentation/controllers/ProfileProvider.dart';
+import 'package:frontend/presentation/controllers/UserProvider.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final Conversation conversation;
@@ -36,9 +36,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
       // chỉ add nếu đúng phòng
       if (msg.conversationId == widget.conversation.id) {
-        ref
-            .read(messagesProvider(widget.conversation.id).notifier)
-            .addMessage(msg);
+        ref.read(msgProvider(widget.conversation.id).notifier).addMessage(msg);
       }
     });
   }
@@ -69,8 +67,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final messagesAsync = ref.watch(messagesProvider(widget.conversation.id));
-    final meAsync = ref.watch(meProvider);
+    final messagesAsync = ref.watch(msgProvider(widget.conversation.id));
+    final meAsync = ref.watch(userProvider);
     final presenceMap = ref.watch(presenceProvider);
     final isOnline = presenceMap[widget.conversation.otherUser?.id];
 
