@@ -34,7 +34,7 @@ export const markMessagesAsSeen = async (conversationId, userId) =>
       senderId: { $ne: userId },
       seenBy: { $ne: userId },
     },
-    { $push: { seenBy: userId } }
+    { $addToSet: { seenBy: userId } } // tránh trùng khi seen nhiều lần
   );
 
 // xóa tin nhắn

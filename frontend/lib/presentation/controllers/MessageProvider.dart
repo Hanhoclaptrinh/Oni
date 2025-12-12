@@ -41,4 +41,16 @@ class MessageNotifier extends StateNotifier<AsyncValue<List<Message>>> {
     final current = state.value ?? [];
     state = AsyncValue.data([msg, ...current]);
   }
+
+  void markSeenBy(String userId) {
+    final current = state.value ?? [];
+    state = AsyncValue.data(
+      current.map((msg) {
+        if (msg.senderId != userId && !msg.seenBy.contains(userId)) {
+          return msg.copyWith(seenBy: [...msg.seenBy, userId]);
+        }
+        return msg;
+      }).toList(),
+    );
+  }
 }

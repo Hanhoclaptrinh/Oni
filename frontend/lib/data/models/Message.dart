@@ -40,4 +40,27 @@ class Message {
           : DateTime.now(),
     );
   }
+
+  // copy with
+  Message copyWith({
+    String? id,
+    String? conversationId,
+    String? senderId,
+    String? type,
+    String? content,
+    String? fileUrl,
+    List<String>? seenBy,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => Message(
+    id: id ?? this.id,
+    conversationId: conversationId ?? this.conversationId,
+    senderId: senderId ?? this.senderId,
+    type: type ?? this.type,
+    content: content ?? this.content,
+    fileUrl: fileUrl ?? this.fileUrl,
+    seenBy: seenBy ?? this.seenBy,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
 }

@@ -30,6 +30,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // join room
     socket.emit("join_conversation", widget.conversation.id);
 
+    socket.emit("seen_messages", {"conversationId": widget.conversation.id});
+
     // listen message
     socket.on("new_message", (data) {
       final msg = Message.fromJson(data);
@@ -37,7 +39,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       // chỉ add nếu đúng phòng
       if (msg.conversationId == widget.conversation.id) {
         ref.read(msgProvider(widget.conversation.id).notifier).addMessage(msg);
+
+        // nếu là tin nhắn của người khác -> seen ngay
+        if (msg.senderId != ref.read(userProvider).value?.id) {
+          socket.emit("seen_messages", {
+            "conversationId": widget.conversation.id,
+          });
+        }
       }
+    });
+
+    socket.on("messages_seen", (data) {
+      final conversationId = data["conversationId"];
+      final userId = data["userId"];
+
+      if (conversationId != widget.conversation.id) return;
+
+      ref.read(msgProvider(conversationId).notifier).markSeenBy(userId);
     });
   }
 
