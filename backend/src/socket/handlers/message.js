@@ -56,4 +56,19 @@ export default function registerMessageHandler(io, socket) {
       console.error("Socket seen_messages:", err.message);
     }
   });
+
+  // typing
+  socket.on("typing_start", ({ conversationId }) => {
+    socket.to(conversationId).emit("user_typing", {
+      conversationId,
+      userId: socket.userId,
+    });
+  });
+
+  socket.on("typing_end", ({ conversationId }) => {
+    socket.to(conversationId).emit("user_stop_typing", {
+      conversationId,
+      userId: socket.userId,
+    });
+  });
 }

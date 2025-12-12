@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/presentation/controllers/SocketProvider.dart';
@@ -8,6 +10,7 @@ import 'package:frontend/data/models/Message.dart';
 import 'package:frontend/data/services/SocketService.dart';
 import 'package:frontend/presentation/controllers/MessageProvider.dart';
 import 'package:frontend/presentation/controllers/UserProvider.dart';
+import 'package:collection/collection.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final Conversation conversation;
@@ -20,6 +23,10 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   late IO.Socket socket;
   final TextEditingController _textController = TextEditingController();
+  final Map<String, String> _typingUsers = {};
+
+  Timer? _typingTimer;
+  bool _isTyping = false;
 
   @override
   void initState() {
@@ -57,6 +64,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
       ref.read(msgProvider(conversationId).notifier).markSeenBy(userId);
     });
+
+    // listen typing
+    socket.on("user_typing", (data) {
+      if (data["conversationId"] != widget.conversation.id) return;
+
+      final userId = data["userId"];
+      final myId = ref.read(userProvider).value?.id;
+      if (userId == myId) return;
+
+      final name = widget.conversation.type == "private"
+          ? widget.conversation.otherUser?.displayName ?? "Ai đó"
+          : widget.conversation.members
+                    .firstWhereOrNull((m) => m.id == userId)
+                    ?.displayName ??
+                "Ai đó";
+
+      setState(() {
+        _typingUsers[userId] = name;
+      });
+    });
+
+    socket.on("user_stop_typing", (data) {
+      if (data["conversationId"] != widget.conversation.id) return;
+      setState(() => _typingUsers.remove(data["userId"]));
+    });
   }
 
   @override
@@ -81,6 +113,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     });
 
     _textController.clear();
+  }
+
+  // handle typing
+  void _handleTyping(String msg) {
+    if (!_isTyping) {
+      _isTyping = true;
+      socket.emit("typing_start", {"conversationId": widget.conversation.id});
+    }
+
+    _typingTimer?.cancel();
+    _typingTimer = Timer(const Duration(seconds: 1), () {
+      _isTyping = false;
+      socket.emit("typing_end", {"conversationId": widget.conversation.id});
+    });
   }
 
   @override
@@ -118,6 +164,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ),
                   ),
 
+                  // typing indicator
+                  _buildTypingIndicator(),
+
+                  // input bar
                   _buildInputBar(),
                 ],
               ),
@@ -134,6 +184,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   // header
   Widget _buildHeader(BuildContext context, Conversation c, bool? isOnline) {
+    final isPrivate = c.type == "private";
     final displayName = c.displayNameSafe;
     final avatar = c.finalAvatar;
 
@@ -173,16 +224,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     color: AppColors.textDark,
                   ),
                 ),
-                Text(
-                  isOnline == true ? "Online" : "Offline",
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: isOnline == true
-                        ? AppColors.onlineGreen
-                        : AppColors.textGrey,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                isPrivate
+                    ? Text(
+                        isOnline == true ? "Online" : "Offline",
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isOnline == true
+                              ? AppColors.onlineGreen
+                              : AppColors.textGrey,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      )
+                    : Text(
+                        "${widget.conversation.members.length} thành viên",
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textGrey,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ],
             ),
           ),
@@ -213,6 +273,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ],
               ),
               child: TextField(
+                onChanged: _handleTyping,
                 controller: _textController,
                 decoration: const InputDecoration(
                   hintText: "Nhập tin nhắn...",
@@ -271,6 +332,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             height: 1.3,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildTypingIndicator() {
+    if (_typingUsers.isEmpty) return const SizedBox.shrink();
+
+    if (widget.conversation.type == "private") {
+      return const Padding(
+        padding: EdgeInsets.only(left: 16, bottom: 6),
+        child: Text(
+          "Đang soạn tin nhắn...",
+          style: TextStyle(fontSize: 12, color: Colors.grey),
+        ),
+      );
+    }
+
+    // group chat
+    final names = _typingUsers.values.join(", ");
+    return Padding(
+      padding: const EdgeInsets.only(left: 16, bottom: 6),
+      child: Text(
+        "$names đang soạn tin nhắn..",
+        style: const TextStyle(fontSize: 12, color: Colors.grey),
       ),
     );
   }
