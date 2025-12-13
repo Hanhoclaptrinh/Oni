@@ -43,7 +43,17 @@ export const sendMessageService = async (conversationId, senderId, payload) => {
   }
 
   // có thể chat trong nhóm chung dù có block
-  return await msgRepository.sendMessage(conversationId, senderId, payload);
+  const message = await msgRepository.sendMessage(
+    conversationId,
+    senderId,
+    payload
+  );
+
+  return {
+    message,
+    members: conversation.members,
+    conversationId,
+  };
 };
 
 // đánh dấu đã xem

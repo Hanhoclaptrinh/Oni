@@ -14,10 +14,12 @@ class SocketService {
   final _friendOnlineController = StreamController<String>.broadcast();
   final _friendOfflineController = StreamController<String>.broadcast();
   final _initialPresenceController = StreamController<List<String>>.broadcast();
+  final _messageController = StreamController<Map<String, dynamic>>.broadcast();
 
   Stream<String> get friendOnline => _friendOnlineController.stream;
   Stream<String> get friendOffline => _friendOfflineController.stream;
   Stream<List<String>> get initialPresence => _initialPresenceController.stream;
+  Stream<Map<String, dynamic>> get messageStream => _messageController.stream;
 
   void connect(String token, {String? myId}) {
     socket = IO.io(
@@ -40,6 +42,22 @@ class SocketService {
       socket!.on("user_online", (uid) {
         Logger().i("user_online event: $uid");
         _friendOnlineController.add(uid.toString());
+      });
+
+      socket!.on("new_message_global", (data) {
+        Logger().i("new msg glo event: $data");
+
+        if (data is Map<String, dynamic>) {
+          _messageController.add(data);
+        }
+      });
+
+      socket!.on("new_message", (data) {
+        Logger().i("new_message event: $data");
+
+        if (data is Map<String, dynamic>) {
+          _messageController.add(data);
+        }
       });
 
       socket!.on("user_offline", (uid) {

@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:frontend/data/models/Message.dart';
 import 'package:frontend/data/services/MessageService.dart';
-import 'package:frontend/presentation/controllers/DioProvider.dart';
+import 'package:frontend/presentation/providers/DioProvider.dart';
 
 final msgServiceProvider = Provider((ref) {
   final dio = ref.watch(dioProvider);
@@ -31,8 +31,12 @@ class MessageNotifier extends StateNotifier<AsyncValue<List<Message>>> {
     try {
       final svc = ref.read(msgServiceProvider);
       final msgs = await svc.getMessages(conversationId);
+
+      if (!mounted) return;
+
       state = AsyncValue.data(msgs);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }

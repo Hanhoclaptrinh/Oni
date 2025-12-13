@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/constants/AppColors.dart';
 import 'package:frontend/data/local/LocalStorageService.dart';
+import 'package:frontend/data/models/Message.dart';
 import 'package:frontend/data/services/SocketService.dart';
-import 'package:frontend/presentation/controllers/UserProvider.dart';
+import 'package:frontend/presentation/providers/ConversationProvider.dart';
+import 'package:frontend/presentation/providers/UserProvider.dart';
 import 'package:frontend/presentation/screens/ConversationScreen.dart';
 import 'package:frontend/presentation/screens/FriendScreen.dart';
 import 'package:frontend/presentation/screens/ProfileScreen.dart';
@@ -21,6 +25,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   bool _socketInit = false;
 
+  StreamSubscription? _msgSub;
+
   @override
   void initState() {
     super.initState();
@@ -29,6 +35,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     Future.microtask(() {
       ref.read(userProvider);
     });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _msgSub?.cancel();
+    _pageController.dispose();
   }
 
   // xử lý chọn bottom item
@@ -59,10 +72,15 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         if (!_socketInit) {
           _socketInit = true;
 
-          // lấy token để connect socket
           LocalStorageService().getAccessToken().then((token) {
             if (token != null) {
-              SocketService().connect(token);
+              final socketService = SocketService();
+              socketService.connect(token);
+
+              _msgSub = socketService.messageStream.listen((data) {
+                final msg = Message.fromJson(data);
+                ref.read(cvsProvider.notifier).onNewGlobalMessage(msg);
+              });
             }
           });
         }

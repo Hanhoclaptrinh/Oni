@@ -2,14 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/constants/AppColors.dart';
 import 'package:frontend/data/models/Conversation.dart';
-import 'package:frontend/presentation/controllers/ConversationProvider.dart';
+import 'package:frontend/presentation/providers/ConversationProvider.dart';
 import 'package:frontend/presentation/screens/ChatScreen.dart';
 
-class ConversationScreen extends ConsumerWidget {
+class ConversationScreen extends ConsumerStatefulWidget {
   const ConversationScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ConversationScreen> createState() => _ConversationScreenState();
+}
+
+class _ConversationScreenState extends ConsumerState<ConversationScreen> {
+  @override
+  Widget build(BuildContext context) {
     final conversationsAsync = ref.watch(cvsProvider);
 
     return conversationsAsync.when(

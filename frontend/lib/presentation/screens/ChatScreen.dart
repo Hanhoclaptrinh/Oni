@@ -2,14 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/presentation/controllers/SocketProvider.dart';
+import 'package:frontend/presentation/providers/SocketProvider.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:frontend/core/constants/AppColors.dart';
 import 'package:frontend/data/models/Conversation.dart';
 import 'package:frontend/data/models/Message.dart';
 import 'package:frontend/data/services/SocketService.dart';
-import 'package:frontend/presentation/controllers/MessageProvider.dart';
-import 'package:frontend/presentation/controllers/UserProvider.dart';
+import 'package:frontend/presentation/providers/MessageProvider.dart';
+import 'package:frontend/presentation/providers/UserProvider.dart';
 import 'package:collection/collection.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -31,6 +31,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void initState() {
     super.initState();
+
+    Future.microtask(() {
+      ref.invalidate(msgProvider(widget.conversation.id));
+    });
 
     socket = SocketService().socket!;
 
@@ -97,6 +101,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     socket.emit("leave_conversation", widget.conversation.id);
 
     socket.off("new_message");
+    socket.off("messages_seen");
+    socket.off("user_typing");
+    socket.off("user_stop_typing");
+
+    _typingTimer?.cancel();
     _textController.dispose();
     super.dispose();
   }

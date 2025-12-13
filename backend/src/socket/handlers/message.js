@@ -3,6 +3,8 @@ import {
   markMessagesAsSeenService,
 } from "../../services/msgService.js";
 
+import { getConversationsOfUser } from "../../repositories/cvsRepository.js";
+
 export default function registerMessageHandler(io, socket) {
   console.log("message handler loaded for", socket.id);
 
@@ -17,11 +19,11 @@ export default function registerMessageHandler(io, socket) {
       }
 
       // luu tin nhan vao db
-      const message = await sendMessageService(conversationId, senderId, {
-        type,
-        content,
-        fileUrl,
-      });
+      const { message, members } = await sendMessageService(
+        conversationId,
+        senderId,
+        payload
+      );
 
       console.log(
         `Message sent in conversation ${conversationId} by ${senderId}`
@@ -29,6 +31,12 @@ export default function registerMessageHandler(io, socket) {
 
       // emit tin nhan den room
       io.to(conversationId).emit("new_message", message);
+
+      for (const memberId of members) {
+        if (memberId.toString() === senderId.toString()) continue;
+
+        io.to(memberId.toString()).emit("new_message_global", message);
+      }
     } catch (err) {
       console.error("Socket send_message:", err.message);
       socket.emit("error_message", err.message);

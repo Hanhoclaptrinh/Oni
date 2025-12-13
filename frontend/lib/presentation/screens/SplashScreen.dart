@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/local/LocalStorageService.dart';
-import 'package:frontend/presentation/controllers/AuthProvider.dart';
+import 'package:frontend/presentation/providers/AuthProvider.dart';
 import 'package:frontend/presentation/screens/AuthScreen.dart';
 import 'package:frontend/presentation/screens/MainScreen.dart';
 
@@ -12,11 +12,32 @@ class SplashScreen extends ConsumerStatefulWidget {
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _animationController;
+
+  static const double progressBarWidth = 280.0;
+  static const double progressBarHeight = 12.0;
+  static const double borderRadius = 6.0;
+  static const Color progressColor = Color(0xFFC084FC);
+  static const Color backgroundColor = Color(0xFFF3E8FF);
+
   @override
   void initState() {
     super.initState();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    )..repeat(reverse: true);
+
     _handleStartup();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> _handleStartup() async {
@@ -59,7 +80,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
         child: Column(
@@ -73,11 +94,39 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 color: Colors.black,
               ),
             ),
-            const SizedBox(height: 20),
-            const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2),
+            const SizedBox(height: 30),
+            Container(
+              width: progressBarWidth,
+              height: progressBarHeight,
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                borderRadius: BorderRadius.circular(borderRadius),
+                border: Border.all(color: Colors.black, width: 1.0),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(borderRadius),
+                child: AnimatedBuilder(
+                  animation: _animationController,
+                  builder: (context, child) {
+                    final animationValue = _animationController.value;
+
+                    const double segmentLength = 0.2;
+                    final startPosition =
+                        animationValue * (1.0 - segmentLength);
+
+                    return Align(
+                      alignment: Alignment.centerLeft,
+                      child: FractionallySizedBox(
+                        widthFactor: segmentLength,
+                        child: Transform.translate(
+                          offset: Offset(startPosition * progressBarWidth, 0),
+                          child: Container(color: progressColor),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ),
           ],
         ),

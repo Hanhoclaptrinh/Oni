@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/models/SignupRequest.dart';
 import 'package:frontend/data/local/LocalStorageService.dart';
 import 'package:frontend/data/services/SocketService.dart';
-import 'package:frontend/presentation/controllers/AuthProvider.dart';
+import 'package:frontend/presentation/providers/AuthProvider.dart';
 import 'package:frontend/presentation/screens/MainScreen.dart';
 import 'package:logger/logger.dart';
 
@@ -180,7 +180,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               children: [
                 _buildSocialButton("Google", Icons.g_mobiledata, Colors.red),
                 _buildSocialButton("Facebook", Icons.facebook, Colors.blue),
-                _buildSocialButton("Apple", Icons.apple, Colors.black),
               ],
             ),
           ],

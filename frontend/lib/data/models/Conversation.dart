@@ -26,7 +26,7 @@ class Conversation {
 
   factory Conversation.fromJson(Map<String, dynamic> json) {
     return Conversation(
-      id: json["_id"] ?? "", 
+      id: json["_id"] ?? "",
       type: json["type"] ?? "private",
       members: json["members"] != null
           ? (json["members"] as List).map((m) => User.fromJson(m)).toList()
@@ -43,6 +43,20 @@ class Conversation {
       createdAt: json["createdAt"] != null
           ? DateTime.parse(json["createdAt"])
           : DateTime.now(),
+    );
+  }
+
+  Conversation copyWith({LatestMessage? latestMessage}) {
+    return Conversation(
+      id: id,
+      type: type,
+      members: members,
+      name: name,
+      avatarUrl: avatarUrl,
+      createdBy: createdBy,
+      latestMessage: latestMessage ?? this.latestMessage,
+      otherUser: otherUser,
+      createdAt: createdAt,
     );
   }
 
