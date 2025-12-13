@@ -89,4 +89,16 @@ class SocketService {
     _friendOfflineController.close();
     _initialPresenceController.close();
   }
+
+  void reconnect(String accessToken) {
+    if (socket == null) {
+      connect(accessToken);
+      return;
+    }
+
+    socket!.disconnect();
+
+    socket!.auth = {'token': accessToken};
+    socket!.connect();
+  }
 }

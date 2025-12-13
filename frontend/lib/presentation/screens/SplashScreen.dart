@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/local/LocalStorageService.dart';
+import 'package:frontend/data/services/SocketService.dart';
 import 'package:frontend/presentation/providers/AuthProvider.dart';
 import 'package:frontend/presentation/screens/AuthScreen.dart';
 import 'package:frontend/presentation/screens/MainScreen.dart';
@@ -57,10 +58,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     }
 
     try {
-      final authService = ref.read(authServiceProvider);
+      final authService = ref.read(authRefreshServiceProvider);
       final result = await authService.refreshToken(refreshToken);
 
       await local.saveTokens(result.accessToken, result.refreshToken);
+
+      SocketService().connect(result.accessToken);
 
       _goTo(const MainScreen());
     } catch (e) {

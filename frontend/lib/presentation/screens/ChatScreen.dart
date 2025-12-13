@@ -11,6 +11,7 @@ import 'package:frontend/data/services/SocketService.dart';
 import 'package:frontend/presentation/providers/MessageProvider.dart';
 import 'package:frontend/presentation/providers/UserProvider.dart';
 import 'package:collection/collection.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final Conversation conversation;
@@ -207,9 +208,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         children: [
           GestureDetector(
             onTap: () => Navigator.pop(context),
-            child: const Icon(
-              Icons.arrow_back_ios_rounded,
-              color: Colors.black,
+            child: SvgPicture.asset(
+              "assets/images/arrowleft.svg",
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(
+                Colors.black,
+                BlendMode.srcIn,
+              ),
             ),
           ),
           const SizedBox(width: 15),
@@ -303,7 +309,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
             child: IconButton(
               onPressed: _handleSend,
-              icon: const Icon(Icons.send_rounded, color: Colors.white),
+              icon: SvgPicture.asset(
+                "assets/images/send.svg",
+                width: 24,
+                height: 24,
+                colorFilter: const ColorFilter.mode(
+                  Colors.white,
+                  BlendMode.srcIn,
+                ),
+              ),
               iconSize: 20,
             ),
           ),

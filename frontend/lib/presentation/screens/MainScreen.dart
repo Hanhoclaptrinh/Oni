@@ -10,7 +10,9 @@ import 'package:frontend/presentation/providers/ConversationProvider.dart';
 import 'package:frontend/presentation/providers/UserProvider.dart';
 import 'package:frontend/presentation/screens/ConversationScreen.dart';
 import 'package:frontend/presentation/screens/FriendScreen.dart';
+import 'package:frontend/presentation/screens/HomeScreen.dart';
 import 'package:frontend/presentation/screens/ProfileScreen.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
@@ -20,18 +22,13 @@ class MainScreen extends ConsumerStatefulWidget {
 }
 
 class _MainScreenState extends ConsumerState<MainScreen> {
-  final PageController _pageController = PageController(initialPage: 0);
   int _pageIndex = 0;
-
   bool _socketInit = false;
-
   StreamSubscription? _msgSub;
 
   @override
   void initState() {
     super.initState();
-
-    // load user info
     Future.microtask(() {
       ref.read(userProvider);
     });
@@ -39,28 +36,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   @override
   void dispose() {
-    super.dispose();
     _msgSub?.cancel();
-    _pageController.dispose();
-  }
-
-  // xử lý chọn bottom item
-  void _onItemTapped(int index) {
-    setState(() {
-      _pageIndex = index;
-    });
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-  }
-
-  // xử lý vuốt màn hình
-  void _onPageChanged(int index) {
-    setState(() {
-      _pageIndex = index;
-    });
+    super.dispose();
   }
 
   @override
@@ -89,45 +66,89 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: PageView(
-          controller: _pageController,
-          onPageChanged: _onPageChanged,
-          children: [
-            Center(child: Text("Home Screen")),
+        child: IndexedStack(
+          index: _pageIndex,
+          children: const [
+            HomeScreen(),
             FriendScreen(),
             ConversationScreen(),
             ProfileScreen(),
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        child: BottomNavigationBar(
-          currentIndex: _pageIndex,
-          onTap: _onItemTapped,
-          backgroundColor: Colors.white,
-          selectedItemColor: AppColors.primaryBlue,
-          showUnselectedLabels: false,
-          type: BottomNavigationBarType.fixed,
-          elevation: 0,
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_rounded),
-              label: 'Home',
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _pageIndex,
+        onTap: (i) => setState(() => _pageIndex = i),
+        backgroundColor: Colors.white,
+        selectedItemColor: AppColors.primaryBlue,
+        showUnselectedLabels: false,
+        type: BottomNavigationBarType.fixed,
+        elevation: 0,
+        items: [
+          BottomNavigationBarItem(
+            icon: SvgPicture.asset(
+              "assets/images/home.svg",
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.search_rounded),
-              label: 'Friend',
+            activeIcon: SvgPicture.asset(
+              "assets/images/home.svg",
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(Colors.blue, BlendMode.srcIn),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble_rounded),
-              label: 'Chat',
+            label: 'Home',
+          ),
+
+          BottomNavigationBarItem(
+            icon: SvgPicture.asset(
+              "assets/images/friend.svg",
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_rounded),
-              label: 'Profile',
+            activeIcon: SvgPicture.asset(
+              "assets/images/friend.svg",
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(Colors.blue, BlendMode.srcIn),
             ),
-          ],
-        ),
+            label: 'Friend',
+          ),
+
+          BottomNavigationBarItem(
+            icon: SvgPicture.asset(
+              "assets/images/conversation.svg",
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
+            ),
+            activeIcon: SvgPicture.asset(
+              "assets/images/conversation.svg",
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(Colors.blue, BlendMode.srcIn),
+            ),
+            label: 'Chat',
+          ),
+
+          BottomNavigationBarItem(
+            icon: SvgPicture.asset(
+              "assets/images/profile.svg",
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
+            ),
+            activeIcon: SvgPicture.asset(
+              "assets/images/profile.svg",
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(Colors.blue, BlendMode.srcIn),
+            ),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }

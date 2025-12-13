@@ -10,7 +10,9 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Icons
   cupertino_icons: ^1.0.8
+  flutter_svg: ^2.2.3
 
   # Date Time Formater
   intl: ^0.20.2

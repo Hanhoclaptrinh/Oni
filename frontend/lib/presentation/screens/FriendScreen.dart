@@ -45,30 +45,59 @@ class FriendScreen extends StatelessWidget {
   }
 
   // Widget SliverAppBar để tạo hiệu ứng cuộn (collapsing/stretching header)
+  // === PHẦN 1: APP BAR (Đã chỉnh sửa để thêm viền/nền cho icon +) ===
   Widget _buildSliverAppBar() {
+    // Giả lập AppColors.textDark thành Colors.black và AppColors.background (nếu cần)
+    const Color appTextDark = Colors.black;
+
     return SliverAppBar(
       backgroundColor: Colors.white,
       elevation: 0,
-      pinned: true, // Giữ thanh AppBar ở trên cùng khi cuộn
-      floating: false, // Thanh sẽ xuất hiện lại ngay khi cuộn xuống
-      expandedHeight: 80, // Chiều cao mở rộng lớn hơn
+      pinned: true,
+      // Thay đổi floating: false thành true nếu muốn thanh cuộn xuống một chút là hiện lại
+      floating:
+          true, // Thường dùng floating: true cho các feed (mình để lại true cho demo)
+      snap: true, // Nếu floating là true, nên thêm snap: true để cuộn mượt hơn
+      expandedHeight: 80,
+
+      // PHẦN ĐÃ CHỈNH SỬA: Thêm nền/viền cho icon +
       actions: [
-        IconButton(
-          icon: const Icon(Icons.search, color: Colors.black),
-          onPressed: () {},
+        Padding(
+          padding: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
+          child: Container(
+            // Chiều rộng và chiều cao bằng nhau để tạo hình tròn
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(
+                0xFFF7F7F9,
+              ), // Màu nền xám nhạt (Light Gray Background)
+              shape: BoxShape.circle,
+              // Thêm border nếu bạn muốn viền ngoài rõ ràng hơn
+              border: Border.all(color: Colors.grey.shade200, width: 1),
+            ),
+            child: IconButton(
+              padding:
+                  EdgeInsets.zero, // Loại bỏ padding mặc định của IconButton
+              icon: const Icon(Icons.search_rounded, color: appTextDark),
+              iconSize: 24, // Kích thước icon
+              onPressed: () {
+                print("Tìm bạn");
+              },
+            ),
+          ),
         ),
       ],
+
       flexibleSpace: FlexibleSpaceBar(
-        centerTitle: true, // <-- QUAN TRỌNG: Giữ tiêu đề dính bên trái
-        // titlePadding được điều chỉnh để tiêu đề nằm ở vị trí góc trái-dưới khi mở rộng.
+        centerTitle: false, // Để tiêu đề luôn dính bên trái
         titlePadding: const EdgeInsets.only(left: 20.0, bottom: 16.0),
         title: const Text(
           "Friends",
           style: TextStyle(
-            // Tiêu đề thu gọn (pinned) sẽ có cỡ chữ này
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: AppColors.textDark,
+            color: appTextDark,
           ),
         ),
       ),

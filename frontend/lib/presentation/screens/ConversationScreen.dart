@@ -81,10 +81,11 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       backgroundColor: Colors.white,
       elevation: 0,
       pinned: true,
-      floating: false,
+      floating: true,
+      snap: true,
       expandedHeight: 80,
       flexibleSpace: FlexibleSpaceBar(
-        centerTitle: true,
+        centerTitle: false,
         titlePadding: const EdgeInsets.only(left: 20.0, bottom: 16.0),
         title: const Text(
           "Conversations",
@@ -103,35 +104,15 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Color(0xFFF7F7F9),
         borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 2,
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
       ),
       child: TextField(
         decoration: InputDecoration(
           hintText: "Search a friend",
           hintStyle: const TextStyle(color: AppColors.textGrey),
           border: InputBorder.none,
-          prefixIcon: Container(
-            padding: const EdgeInsets.all(8),
-            margin: const EdgeInsets.only(right: 8),
-            decoration: const BoxDecoration(
-              color: AppColors.primaryBlue,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.search_rounded,
-              color: Colors.white,
-              size: 25,
-            ),
-          ),
+          prefixIcon: Icon(Icons.search_rounded, color: Colors.black, size: 25),
           prefixIconConstraints: const BoxConstraints(
             minWidth: 40,
             minHeight: 40,
