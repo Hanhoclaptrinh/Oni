@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/constants/AppColors.dart';
 import 'package:frontend/data/models/Conversation.dart';
 import 'package:frontend/presentation/providers/ConversationProvider.dart';
+import 'package:frontend/presentation/providers/SkSsProvider.dart';
 import 'package:frontend/presentation/screens/ChatScreen.dart';
 
 class ConversationScreen extends ConsumerStatefulWidget {
@@ -135,7 +136,11 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     final lastMsg = c.latestMessage?.content ?? "Bắt đầu cuộc trò chuyện";
 
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
+        await ref.read(skSsServiceProvider).ensureValidSocketSession();
+
+        if (!context.mounted) return;
+
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => ChatScreen(conversation: c)),
