@@ -11,6 +11,7 @@ class Conversation {
   final LatestMessage? latestMessage;
   final User? otherUser;
   final DateTime createdAt;
+  final bool hasUnread;
 
   Conversation({
     required this.id,
@@ -22,6 +23,7 @@ class Conversation {
     this.latestMessage,
     this.otherUser,
     required this.createdAt,
+    this.hasUnread = false,
   });
 
   factory Conversation.fromJson(Map<String, dynamic> json) {
@@ -43,10 +45,11 @@ class Conversation {
       createdAt: json["createdAt"] != null
           ? DateTime.parse(json["createdAt"])
           : DateTime.now(),
+      hasUnread: false,
     );
   }
 
-  Conversation copyWith({LatestMessage? latestMessage}) {
+  Conversation copyWith({LatestMessage? latestMessage, bool? hasUnread}) {
     return Conversation(
       id: id,
       type: type,
@@ -57,6 +60,7 @@ class Conversation {
       latestMessage: latestMessage ?? this.latestMessage,
       otherUser: otherUser,
       createdAt: createdAt,
+      hasUnread: hasUnread ?? this.hasUnread,
     );
   }
 

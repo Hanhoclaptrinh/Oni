@@ -135,8 +135,12 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
 
     final lastMsg = c.latestMessage?.content ?? "Bắt đầu cuộc trò chuyện";
 
+    final isUnread = c.hasUnread;
+
     return GestureDetector(
       onTap: () async {
+        ref.read(cvsProvider.notifier).markAsRead(c.id); // clear unread
+
         await ref.read(skSsServiceProvider).ensureValidSocketSession();
 
         if (!context.mounted) return;
@@ -176,9 +180,12 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                   const SizedBox(height: 4),
                   Text(
                     lastMsg,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.textGrey,
+                      fontWeight: isUnread
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      color: isUnread ? AppColors.textDark : AppColors.textGrey,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

@@ -36,21 +36,34 @@ class ConversationNotifier
     }
   }
 
-  void onNewGlobalMessage(Message msg) {
+  void onNewGlobalMessage(Message msg, String myUserId) {
     final current = state.value ?? [];
 
     final idx = current.indexWhere((c) => c.id == msg.conversationId);
     if (idx == -1) return;
 
     final conv = current[idx];
+    final isMine = msg.senderId == myUserId;
 
     final updated = conv.copyWith(
       latestMessage: LatestMessage.fromMessage(msg),
+      hasUnread: !isMine,
     );
 
     state = AsyncValue.data([
       updated,
       ...current.where((c) => c.id != conv.id),
     ]);
+  }
+
+  void markAsRead(String conversationId) {
+    state = state.whenData((list) {
+      return list.map((c) {
+        if (c.id == conversationId) {
+          return c.copyWith(hasUnread: false);
+        }
+        return c;
+      }).toList();
+    });
   }
 }

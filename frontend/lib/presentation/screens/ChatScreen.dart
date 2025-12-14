@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/presentation/providers/ConversationProvider.dart';
 import 'package:frontend/presentation/providers/SocketProvider.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:frontend/core/constants/AppColors.dart';
@@ -34,6 +35,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.initState();
 
     Future.microtask(() {
+      ref.read(cvsProvider.notifier).markAsRead(widget.conversation.id);
       ref.invalidate(msgProvider(widget.conversation.id));
     });
 

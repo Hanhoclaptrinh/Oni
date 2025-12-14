@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
 // tao access token voi jwt
-const ACCESS_TOKEN_TTL = "5m"; // thoi gian AT song trong mot phien dang nhap -> duoc cap tu dong sau moi ttl die
+const ACCESS_TOKEN_TTL = "15m"; // thoi gian AT song trong mot phien dang nhap -> duoc cap tu dong sau moi ttl die
 
 export const signUp = async (payload) => {
   const { username, email, password, firstName, lastName } = payload;

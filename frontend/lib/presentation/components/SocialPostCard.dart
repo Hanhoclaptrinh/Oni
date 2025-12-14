@@ -168,14 +168,6 @@ class SocialPostCard extends StatelessWidget {
                   onTap: onShareTap,
                   child: Row(
                     children: [
-                      Text(
-                        "Share",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                      SizedBox(width: 4),
                       SvgPicture.asset(
                         "assets/images/share.svg",
                         width: 24,

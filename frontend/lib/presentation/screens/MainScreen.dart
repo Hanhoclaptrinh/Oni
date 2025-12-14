@@ -56,7 +56,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
               _msgSub = socketService.messageStream.listen((data) {
                 final msg = Message.fromJson(data);
-                ref.read(cvsProvider.notifier).onNewGlobalMessage(msg);
+                ref.read(cvsProvider.notifier).onNewGlobalMessage(msg, me.id);
               });
             }
           });
