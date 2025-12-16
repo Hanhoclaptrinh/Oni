@@ -2,12 +2,19 @@ import Message from "../models/message.js";
 import Conversation from "../models/conversation.js";
 
 // lấy lịch sử chat
-export const getMessages = (conversationId, skip = 0, limit = 50) =>
-  Message.find({ conversationId })
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit)
-    .lean();
+export const getMessages = (
+  conversationId,
+  beforeMessageId = null,
+  limit = 30
+) => {
+  const query = { conversationId };
+
+  if (beforeMessageId) {
+    query._id = { $lt: beforeMessageId };
+  }
+
+  return Message.find(query).sort({ _id: -1 }).limit(limit).lean();
+};
 
 // gửi tin nhắn
 export const sendMessage = async (conversationId, senderId, payload) => {

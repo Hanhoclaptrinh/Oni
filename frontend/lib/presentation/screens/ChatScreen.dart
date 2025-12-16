@@ -26,6 +26,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   late IO.Socket socket;
   final TextEditingController _textController = TextEditingController();
   final Map<String, String> _typingUsers = {};
+  final ScrollController _scrollController = ScrollController();
 
   Timer? _typingTimer;
   bool _isTyping = false;
@@ -33,6 +34,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void initState() {
     super.initState();
+
+    // listen keo len top (reverse == true trong listview)
+    _scrollController.addListener(() {
+      // keo len top > 50 pixel thi load them tin nhan
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 50) {
+        ref.read(msgProvider(widget.conversation.id).notifier).loadMore();
+      }
+    });
 
     Future.microtask(() {
       ref.read(cvsProvider.notifier).markAsRead(widget.conversation.id);
@@ -163,6 +173,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   // message list
                   Expanded(
                     child: ListView.builder(
+                      controller: _scrollController,
                       reverse: true,
                       padding: const EdgeInsets.all(20),
                       physics: const BouncingScrollPhysics(),

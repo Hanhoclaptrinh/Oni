@@ -9,8 +9,9 @@ import 'package:frontend/data/services/SocketService.dart';
 import 'package:frontend/presentation/providers/ConversationProvider.dart';
 import 'package:frontend/presentation/providers/UserProvider.dart';
 import 'package:frontend/presentation/screens/ConversationScreen.dart';
-import 'package:frontend/presentation/screens/FriendScreen.dart';
+import 'package:frontend/presentation/screens/ExploreScreen.dart';
 import 'package:frontend/presentation/screens/HomeScreen.dart';
+import 'package:frontend/presentation/screens/PostScreen.dart';
 import 'package:frontend/presentation/screens/ProfileScreen.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -70,7 +71,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           index: _pageIndex,
           children: const [
             HomeScreen(),
-            FriendScreen(),
+            ExploreScreen(),
+            PostScreen(),
             ConversationScreen(),
             ProfileScreen(),
           ],
@@ -103,18 +105,34 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
-              "assets/images/friend.svg",
+              "assets/images/explore.svg",
               width: 24,
               height: 24,
               colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
             ),
             activeIcon: SvgPicture.asset(
-              "assets/images/friend.svg",
+              "assets/images/explore.svg",
               width: 24,
               height: 24,
               colorFilter: const ColorFilter.mode(Colors.blue, BlendMode.srcIn),
             ),
-            label: 'Friend',
+            label: 'Explore',
+          ),
+
+          BottomNavigationBarItem(
+            icon: SvgPicture.asset(
+              "assets/images/post.svg",
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
+            ),
+            activeIcon: SvgPicture.asset(
+              "assets/images/post.svg",
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(Colors.blue, BlendMode.srcIn),
+            ),
+            label: 'Post',
           ),
 
           BottomNavigationBarItem(

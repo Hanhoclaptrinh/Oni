@@ -21,19 +21,21 @@ final msgProvider =
 class MessageNotifier extends StateNotifier<AsyncValue<List<Message>>> {
   final Ref ref;
   final String conversationId;
+  bool _isLoadingMore = false;
+  bool _isNoMore = false;
 
   MessageNotifier(this.ref, this.conversationId)
     : super(const AsyncValue.loading()) {
-    _loadMessages();
+    _loadInit();
   }
 
-  Future<void> _loadMessages() async {
+  // load tin nhan len truoc - chi 1 lan
+  Future<void> _loadInit() async {
     try {
       final svc = ref.read(msgServiceProvider);
       final msgs = await svc.getMessages(conversationId);
 
       if (!mounted) return;
-
       state = AsyncValue.data(msgs);
     } catch (e, st) {
       if (!mounted) return;
@@ -41,11 +43,61 @@ class MessageNotifier extends StateNotifier<AsyncValue<List<Message>>> {
     }
   }
 
+  // load them tin nhan
+  Future<void> loadMore() async {
+    if (_isLoadingMore || _isNoMore) return; // kh con gi de load
+
+    final current = state.value ?? [];
+    if (current.isEmpty) return;
+
+    _isLoadingMore = true;
+
+    try {
+      final oldestId = current.last.id;
+      final svc = ref.read(msgServiceProvider);
+
+      final oldestMsg = await svc.getMessages(
+        conversationId,
+        beforeMsgId: oldestId,
+      );
+
+      if (!mounted) return;
+
+      if (oldestMsg.isEmpty) {
+        _isNoMore = true;
+      } else {
+        state = AsyncData([...current, ...oldestMsg]);
+      }
+    } catch (e, st) {
+      if (!mounted) return;
+      state = AsyncValue.error(e, st);
+    } finally {
+      _isLoadingMore = false;
+    }
+  }
+
+  // => chi load duoc 1 lan duy nhat
+  // Future<void> _loadMessages() async {
+  //   try {
+  //     final svc = ref.read(msgServiceProvider);
+  //     final msgs = await svc.getMessages(conversationId);
+
+  //     if (!mounted) return;
+
+  //     state = AsyncValue.data(msgs);
+  //   } catch (e, st) {
+  //     if (!mounted) return;
+  //     state = AsyncValue.error(e, st);
+  //   }
+  // }
+
+  // tin nhan moi - socket
   void addMessage(Message msg) {
     final current = state.value ?? [];
     state = AsyncValue.data([msg, ...current]);
   }
 
+  // seen
   void markSeenBy(String userId) {
     final current = state.value ?? [];
     state = AsyncValue.data(

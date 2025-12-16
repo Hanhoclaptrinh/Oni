@@ -7,12 +7,15 @@ class MessageService {
 
   Future<List<Message>> getMessages(
     String conversationId, {
-    int skip = 0,
+    String? beforeMsgId,
     int limit = 50,
   }) async {
     final res = await dio.get(
       "/messages/$conversationId",
-      queryParameters: {"skip": skip, "limit": limit},
+      queryParameters: {
+        if (beforeMsgId != null) "before": beforeMsgId,
+        "limit": limit,
+      },
     );
 
     return (res.data["data"] as List).map((e) => Message.fromJson(e)).toList();

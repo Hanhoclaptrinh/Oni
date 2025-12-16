@@ -2,13 +2,19 @@ import * as msgService from "../services/msgService.js";
 
 export const getMessagesHandler = async (req, res, next) => {
   try {
+    const userId = req.user.id;
     const { conversationId } = req.params;
+    const { before, limit } = req.query;
 
-    const result = await msgService.getMessagesService(conversationId);
+    const result = await msgService.getMessagesService(
+      conversationId,
+      userId,
+      before || null,
+      Number(limit) || 30
+    );
 
     return res.status(200).json({
       success: true,
-      message: "lấy danh sách tin nhắn thành công",
       data: result,
     });
   } catch (e) {

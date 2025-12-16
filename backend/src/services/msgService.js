@@ -6,12 +6,22 @@ import * as error from "../utils/error.js";
 // list lịch sử chat - 50 tin
 export const getMessagesService = async (
   conversationId,
-  skip = 0,
-  limit = 50
+  userId,
+  beforeMessageId = null,
+  limit = 30
 ) => {
   if (!conversationId) throw new error.BadRequestError("thiếu id hội thoại");
 
-  return msgRepository.getMessages(conversationId, skip, limit);
+  const conversation = await cvsRepository.findConversationById(conversationId);
+  if (!conversation) throw new error.NotFoundError("hội thoại không tồn tại");
+
+  const isMember = conversation.members
+    .map((id) => id.toString())
+    .includes(userId.toString());
+
+  if (!isMember) throw new error.ForbiddenError("không có quyền xem hội thoại");
+
+  return msgRepository.getMessages(conversationId, beforeMessageId, limit);
 };
 
 // gửi tin nhắn
@@ -19,8 +29,12 @@ export const sendMessageService = async (conversationId, senderId, payload) => {
   // validate
   if (!conversationId) throw new error.BadRequestError("thiếu id hội thoại");
   if (!senderId) throw new error.BadRequestError("thiếu id người gửi");
-  if (!payload.content && !payload.fileUrl)
-    throw new error.BadRequestError("tin nhắn không thể rỗng");
+
+  if (payload.type === "text" && !payload.content)
+    throw new error.BadRequestError("tin nhắn text không được rỗng");
+
+  if (payload.type !== "text" && !payload.fileUrl)
+    throw new error.BadRequestError("tin nhắn file phải có fileUrl");
 
   const conversation = await cvsRepository.findConversationById(conversationId);
   if (!conversation) throw new error.NotFoundError("hội thoại không tồn tại");

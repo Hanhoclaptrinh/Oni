@@ -23,8 +23,8 @@ class Message {
 
   factory Message.fromJson(Map<String, dynamic> json) {
     return Message(
-      id: json["_id"],
-      conversationId: json["conversationId"]?.toString() ?? "",
+      id: json["_id"].toString(),
+      conversationId: json["conversationId"].toString(),
       senderId: json["senderId"]?.toString() ?? "",
       type: json["type"] ?? "text",
       content: json["content"],
