@@ -82,8 +82,8 @@ class Conversation {
 
   String get displayNameSafe {
     if (type == "private") {
-      return otherUser?.displayName ?? "Unknown";
+      return otherUser?.displayName ?? "Người dùng Oni";
     }
-    return name ?? "Group Chat";
+    return name ?? "Cuộc trò chuyện nhóm";
   }
 }

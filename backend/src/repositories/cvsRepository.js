@@ -4,7 +4,7 @@ import Conversation from "../models/conversation.js";
 export const getConversationsOfUser = (userId) =>
   Conversation.find({ members: userId })
     .populate("members", "displayName avatarUrl")
-    .populate("latestMessage")
+    .populate("latestMessage", "content type createdAt")
     .sort({ updatedAt: -1 }) // hội thoại mới nhắn nằm trên cùng
     .lean();
 
@@ -34,10 +34,17 @@ export const createPrivateConversation = async (senderId, recipientId) => {
 };
 
 // tạo nhóm
-export const createGroupConversation = (creatorId, memberIds = []) =>
+export const createGroupConversation = (
+  creatorId,
+  memberIds = [],
+  name = null,
+  avatarUrl = null
+) =>
   Conversation.create({
     type: "group",
     members: [creatorId, ...memberIds],
+    name,
+    avatarUrl,
     createdBy: creatorId,
   });
 

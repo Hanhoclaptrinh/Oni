@@ -58,7 +58,20 @@ export const createGroupConversationHandler = async (req, res, next) => {
 
 export const deleteConversationHandler = async (req, res, next) => {
   try {
+    const userId = req.user.id;
     const { conversationId } = req.params;
+
+    const isMember = await cvsService.verifyConversationMemberService(
+      conversationId,
+      userId
+    );
+
+    if (!isMember) {
+      return res.status(403).json({
+        success: false,
+        message: "bạn không có quyền xóa cuộc hội thoại này",
+      });
+    }
 
     await cvsService.deleteConversationService(conversationId);
 

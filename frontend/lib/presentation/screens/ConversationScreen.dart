@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/constants/AppColors.dart';
+import 'package:frontend/core/utils/RemoveVie.dart';
 import 'package:frontend/data/models/Conversation.dart';
 import 'package:frontend/presentation/providers/ConversationProvider.dart';
 import 'package:frontend/presentation/providers/SkSsProvider.dart';
@@ -14,12 +15,32 @@ class ConversationScreen extends ConsumerStatefulWidget {
 }
 
 class _ConversationScreenState extends ConsumerState<ConversationScreen> {
+  String _keyword = "";
+
+  List<Conversation> _filterConversations(List<Conversation> conversations) {
+    if (_keyword.isEmpty) return conversations;
+
+    final k = RemoveVie().removeVietnameseAccent(_keyword.toLowerCase());
+
+    return conversations.where((c) {
+      final name = RemoveVie().removeVietnameseAccent(
+        c.displayNameSafe.toLowerCase(),
+      );
+      final lastMsg = RemoveVie().removeVietnameseAccent(
+        (c.latestMessage?.content ?? "").toLowerCase(),
+      );
+
+      return name.contains(k) || lastMsg.contains(k);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final conversationsAsync = ref.watch(cvsProvider);
 
     return conversationsAsync.when(
       data: (conversations) {
+        final filteredConvos = _filterConversations(conversations);
         return Scaffold(
           backgroundColor: Colors.white,
           body: CustomScrollView(
@@ -27,10 +48,8 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
               parent: AlwaysScrollableScrollPhysics(),
             ),
             slivers: <Widget>[
-              // sliver appbar
               _buildSliverAppBar(),
 
-              // sliver box
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -44,20 +63,34 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                 ),
               ),
 
-              // sliver list
-              SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: _buildConversationItem(
-                      context,
-                      conversations[index],
+              // 👉 EMPTY STATE
+              if (filteredConvos.isEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 50),
+                    child: Center(
+                      child: Text(
+                        "Không tìm thấy cuộc trò chuyện nào",
+                        style: TextStyle(color: AppColors.textGrey),
+                      ),
                     ),
-                  );
-                }, childCount: conversations.length),
-              ),
+                  ),
+                )
+              else
+                SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: _buildConversationItem(
+                        context,
+                        filteredConvos[index],
+                      ),
+                    );
+                  }, childCount: filteredConvos.length),
+                ),
             ],
           ),
+
           floatingActionButton: FloatingActionButton(
             onPressed: () {
               /// todo
@@ -109,6 +142,9 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
         borderRadius: BorderRadius.circular(30),
       ),
       child: TextField(
+        onChanged: (value) {
+          setState(() => _keyword = value.toLowerCase().trim());
+        },
         decoration: InputDecoration(
           hintText: "Search a friend",
           hintStyle: const TextStyle(color: AppColors.textGrey),
