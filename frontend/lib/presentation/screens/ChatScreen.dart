@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/presentation/providers/ConversationProvider.dart';
 import 'package:frontend/presentation/providers/SocketProvider.dart';
@@ -303,9 +304,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               child: TextField(
                 onChanged: _handleTyping,
                 controller: _textController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: "Nhập tin nhắn...",
                   border: InputBorder.none,
+
+                  // gui icon
+                  // prefixIcon: IconButton(
+                  //   onPressed: () => print(""),
+                  //   icon: Icon(
+                  //     Icons.emoji_emotions_rounded,
+                  //     color: Colors.grey,
+                  //   ),
+                  // ),
                 ),
               ),
             ),
@@ -339,8 +349,227 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
+  // // message bubble - context menu ios
+  // Widget _buildMessageBubble(String text, bool isMe) {
+  //   return CupertinoContextMenu(
+  //     enableHapticFeedback: true,
+  //     actions: <Widget>[
+  //       CupertinoContextMenuAction(
+  //         onPressed: () => Navigator.pop(context),
+  //         trailingIcon: CupertinoIcons.doc_on_doc,
+  //         child: const Text('Sao chép'),
+  //       ),
+  //       CupertinoContextMenuAction(
+  //         onPressed: () => Navigator.pop(context),
+  //         trailingIcon: CupertinoIcons.pencil,
+  //         child: const Text('Chỉnh sửa'),
+  //       ),
+  //       CupertinoContextMenuAction(
+  //         isDestructiveAction: true,
+  //         onPressed: () => Navigator.pop(context),
+  //         trailingIcon: CupertinoIcons.trash,
+  //         child: const Text('Xóa'),
+  //       ),
+  //     ],
+  //     child: _bubbleUI(text, isMe),
+  //   );
+  // }
+
   // message bubble
   Widget _buildMessageBubble(String text, bool isMe) {
+    final scaleNotifier = ValueNotifier<double>(1.0);
+
+    void _handleAction(String value, String text) {
+      switch (value) {
+        case 'copy':
+          // sao chep vao clipboard
+          Clipboard.setData(ClipboardData(text: text));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                "Đã sao chép văn bản vào bộ nhớ đệm",
+                style: TextStyle(color: Colors.black),
+              ),
+              backgroundColor: Colors.white,
+            ),
+          );
+          break;
+        case 'edit':
+          print("Mở chế độ chỉnh sửa cho: $text");
+          break;
+        case "reply":
+          print("Trả lời tin nhắn");
+        case 'recall':
+          // show dialog box truoc khi thu hoi
+          _showDeleteConfirmDialog(context, text);
+          break;
+        case 'delete':
+          // xoa tin nhan 1 phia thi khong can hoi
+          print("Xóa tin nhắn 1 phía");
+          break;
+      }
+    }
+
+    return ValueListenableBuilder<double>(
+      valueListenable: scaleNotifier,
+      builder: (context, scale, child) {
+        return AnimatedScale(
+          scale: scale,
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOut,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
+            child: GestureDetector(
+              onTapDown: (details) async {
+                HapticFeedback.lightImpact(); // phan hoi rung
+                scaleNotifier.value = 1.05; // zoom-in bubble 50%
+
+                final pos = details.globalPosition; // vi tri click vao bubble
+
+                // hien thi menu context
+                await showMenu(
+                  context: context,
+                  position: RelativeRect.fromLTRB(
+                    pos.dx,
+                    pos.dy,
+                    pos.dx + 1,
+                    0,
+                  ),
+                  useRootNavigator: true,
+                  elevation: 20,
+                  constraints: const BoxConstraints(minWidth: 160),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  color: Colors.white.withOpacity(0.95),
+                  items: <PopupMenuEntry>[
+                    _buildModernItem(
+                      Icons.content_copy_rounded,
+                      "Sao chép",
+                      "copy",
+                    ),
+                    _buildModernItem(
+                      Icons.edit_note_rounded,
+                      "Chỉnh sửa",
+                      "edit",
+                    ),
+                    _buildModernItem(Icons.reply_rounded, "Trả lời", "reply"),
+                    const PopupMenuDivider(height: 1),
+                    _buildModernItem(
+                      Icons.undo_rounded,
+                      "Thu hồi",
+                      "recall",
+                      isWarning: true,
+                    ),
+                    _buildModernItem(
+                      Icons.delete_outline_rounded,
+                      "Xóa",
+                      "delete",
+                      isWarning: true,
+                    ),
+                  ],
+                ).then((value) {
+                  scaleNotifier.value =
+                      1.0; // tra lai kich thuoc cu khi close menu
+                  if (value != null) _handleAction(value, text);
+                });
+              },
+              child: child!,
+            ),
+          ),
+        );
+      },
+      child: _bubbleUI(text, isMe),
+    );
+  }
+
+  // build menu item
+  PopupMenuItem _buildModernItem(
+    IconData icon,
+    String title,
+    String value, {
+    bool isWarning = false,
+  }) {
+    return PopupMenuItem(
+      value: value,
+      height: 45,
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: isWarning
+                  ? Colors.red.withOpacity(0.1)
+                  : Colors.blue.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              size: 18,
+              color: isWarning ? Colors.redAccent : Colors.blueAccent,
+            ),
+          ),
+          const SizedBox(width: 15),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: isWarning ? Colors.redAccent : Colors.black87,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // dialog box
+  Future<void> _showDeleteConfirmDialog(
+    BuildContext context,
+    String text,
+  ) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true, // cho phep cham ra ngoai de close box
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            'Thu hồi tin nhắn?',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text(
+            'Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa tin nhắn này không?',
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text(
+                'Xóa',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onPressed: () {
+                // logic thu hoi tin nhan
+                print("Đã thu hồi tin nhắn: $text");
+
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _bubbleUI(String text, bool isMe) {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -365,7 +594,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           style: TextStyle(
             color: isMe ? Colors.white : AppColors.textDark,
             fontSize: 15,
-            height: 1.3,
           ),
         ),
       ),

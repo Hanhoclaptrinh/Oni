@@ -3,8 +3,6 @@ import {
   markMessagesAsSeenService,
 } from "../../services/msgService.js";
 
-import { getConversationsOfUser } from "../../repositories/cvsRepository.js";
-
 export default function registerMessageHandler(io, socket) {
   console.log("message handler loaded for", socket.id);
 
