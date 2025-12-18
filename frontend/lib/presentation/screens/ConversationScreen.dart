@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/constants/AppColors.dart';
 import 'package:frontend/core/utils/RemoveVie.dart';
 import 'package:frontend/data/models/Conversation.dart';
+import 'package:frontend/data/services/SocketService.dart';
 import 'package:frontend/presentation/providers/ConversationProvider.dart';
 import 'package:frontend/presentation/providers/SkSsProvider.dart';
 import 'package:frontend/presentation/screens/ChatScreen.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class ConversationScreen extends ConsumerStatefulWidget {
   const ConversationScreen({super.key});
@@ -15,6 +17,7 @@ class ConversationScreen extends ConsumerStatefulWidget {
 }
 
 class _ConversationScreenState extends ConsumerState<ConversationScreen> {
+  late IO.Socket socket;
   String _keyword = "";
 
   List<Conversation> _filterConversations(List<Conversation> conversations) {
@@ -32,6 +35,19 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
 
       return name.contains(k) || lastMsg.contains(k);
     }).toList();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    socket = SocketService().socket!;
+
+    socket.on("msg:revoke", (data) {
+      ref
+          .read(cvsProvider.notifier)
+          .onMessageRevoked(data["conversationId"], data["msgId"]);
+    });
   }
 
   @override

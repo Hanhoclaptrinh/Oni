@@ -36,6 +36,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void initState() {
     super.initState();
 
+    socket = SocketService().socket!;
+
+    // join room
+    socket.emit("join_conversation", widget.conversation.id);
+
     // listen keo len top (reverse == true trong listview)
     _scrollController.addListener(() {
       // keo len top > 50 pixel thi load them tin nhan
@@ -49,11 +54,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ref.read(cvsProvider.notifier).markAsRead(widget.conversation.id);
       ref.invalidate(msgProvider(widget.conversation.id));
     });
-
-    socket = SocketService().socket!;
-
-    // join room
-    socket.emit("join_conversation", widget.conversation.id);
 
     socket.emit("seen_messages", {"conversationId": widget.conversation.id});
 
@@ -106,6 +106,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     socket.on("user_stop_typing", (data) {
       if (data["conversationId"] != widget.conversation.id) return;
       setState(() => _typingUsers.remove(data["userId"]));
+    });
+
+    // thu hoi tin nhan socket
+    socket.on("msg:revoke", (data) {
+      ref
+          .read(msgProvider(widget.conversation.id).notifier)
+          .onMessageRevoked(data["msgId"]);
     });
   }
 
@@ -183,7 +190,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         final msg = messages[index];
                         final isMe = msg.senderId == myId;
 
-                        return _buildMessageBubble(msg.content ?? "", isMe);
+                        return _buildMessageBubble(msg, isMe);
                       },
                     ),
                   ),
@@ -376,8 +383,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   // }
 
   // message bubble
-  Widget _buildMessageBubble(String text, bool isMe) {
+  Widget _buildMessageBubble(Message msg, bool isMe) {
     final scaleNotifier = ValueNotifier<double>(1.0);
+
+    if (msg.status == "revoked") {
+      return Align(
+        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Text(
+            "Tin nhắn đã được thu hồi",
+            style: TextStyle(
+              fontStyle: FontStyle.italic,
+              color: Colors.grey,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      );
+    }
 
     void _handleAction(String value, String text) {
       switch (value) {
@@ -401,11 +430,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           print("Trả lời tin nhắn");
         case 'recall':
           // show dialog box truoc khi thu hoi
-          _showDeleteConfirmDialog(context, text);
+          _showDeleteConfirmDialog(msg.id, context, text);
           break;
         case 'delete':
           // xoa tin nhan 1 phia thi khong can hoi
-          print("Xóa tin nhắn 1 phía");
+          ref
+              .read(msgProvider(widget.conversation.id).notifier)
+              .deleteMessage(msg.id);
           break;
       }
     }
@@ -471,7 +502,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ).then((value) {
                   scaleNotifier.value =
                       1.0; // tra lai kich thuoc cu khi close menu
-                  if (value != null) _handleAction(value, text);
+                  if (value != null) _handleAction(value, msg.content ?? "");
                 });
               },
               child: child!,
@@ -479,7 +510,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
         );
       },
-      child: _bubbleUI(text, isMe),
+      child: _bubbleUI(msg, isMe),
     );
   }
 
@@ -525,6 +556,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   // dialog box
   Future<void> _showDeleteConfirmDialog(
+    String msgId,
     BuildContext context,
     String text,
   ) async {
@@ -556,9 +588,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              onPressed: () {
+              onPressed: () async {
+                // update UI
+                ref
+                    .read(msgProvider(widget.conversation.id).notifier)
+                    .onMessageRevoked(msgId);
+
                 // logic thu hoi tin nhan
-                print("Đã thu hồi tin nhắn: $text");
+                await ref.read(msgServiceProvider).revokeMessage(msgId);
+
+                if (!mounted) return;
 
                 Navigator.of(context).pop();
               },
@@ -569,7 +608,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _bubbleUI(String text, bool isMe) {
+  Widget _bubbleUI(Message msg, bool isMe) {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -590,7 +629,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
         ),
         child: Text(
-          text,
+          msg.content ?? "",
           style: TextStyle(
             color: isMe ? Colors.white : AppColors.textDark,
             fontSize: 15,

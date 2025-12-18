@@ -66,4 +66,26 @@ class ConversationNotifier
       }).toList();
     });
   }
+
+  void onMessageRevoked(String conversationId, String msgId) {
+    final current = state.value ?? [];
+
+    state = AsyncValue.data(
+      current.map((c) {
+        if (c.id != conversationId) return c;
+
+        // neu msg bi revoke la last msg
+        if (c.latestMessage?.id == msgId) {
+          return c.copyWith(
+            latestMessage: c.latestMessage!.copyWith(
+              content: "Tin nhắn đã được thu hồi",
+              type: "revoked",
+            ),
+          );
+        }
+
+        return c;
+      }).toList(),
+    );
+  }
 }

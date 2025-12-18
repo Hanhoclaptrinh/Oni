@@ -20,4 +20,14 @@ class MessageService {
 
     return (res.data["data"] as List).map((e) => Message.fromJson(e)).toList();
   }
+
+  // xoa tin nhan
+  Future<void> deleteMessageForMe(String msgId) async {
+    await dio.patch("/messages/$msgId/hide");
+  }
+
+  // thu hoi tin nhan
+  Future<void> revokeMessage(String msgId) async {
+    await dio.patch("/messages/$msgId/revoke");
+  }
 }

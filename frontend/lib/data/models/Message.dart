@@ -3,6 +3,7 @@ class Message {
   final String conversationId;
   final String senderId;
   final String type;
+  final String status;
   final String? content;
   final String? fileUrl;
   final List<String> seenBy;
@@ -14,6 +15,7 @@ class Message {
     required this.conversationId,
     required this.senderId,
     required this.type,
+    required this.status,
     this.content,
     this.fileUrl,
     required this.seenBy,
@@ -27,6 +29,7 @@ class Message {
       conversationId: json["conversationId"].toString(),
       senderId: json["senderId"]?.toString() ?? "",
       type: json["type"] ?? "text",
+      status: json["status"],
       content: json["content"],
       fileUrl: json["fileUrl"],
       seenBy: json["seenBy"] != null
@@ -47,6 +50,7 @@ class Message {
     String? conversationId,
     String? senderId,
     String? type,
+    String? status,
     String? content,
     String? fileUrl,
     List<String>? seenBy,
@@ -57,6 +61,7 @@ class Message {
     conversationId: conversationId ?? this.conversationId,
     senderId: senderId ?? this.senderId,
     type: type ?? this.type,
+    status: status ?? this.status,
     content: content ?? this.content,
     fileUrl: fileUrl ?? this.fileUrl,
     seenBy: seenBy ?? this.seenBy,

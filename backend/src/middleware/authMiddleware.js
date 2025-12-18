@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.js";
+import { io } from "../socket/index.js";
 
 export const protectedRoute = (req, res, next) => {
   try {
@@ -46,6 +47,9 @@ export const protectedRoute = (req, res, next) => {
         role: user.role,
         ...user.toObject(),
       };
+
+      // inject io
+      req.io = io;
 
       next();
     });

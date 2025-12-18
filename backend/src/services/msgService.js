@@ -8,7 +8,7 @@ export const getMessagesService = async (
   conversationId,
   userId,
   beforeMessageId = null,
-  limit = 30
+  limit = 50
 ) => {
   if (!conversationId) throw new error.BadRequestError("thiếu id hội thoại");
 
@@ -21,7 +21,12 @@ export const getMessagesService = async (
 
   if (!isMember) throw new error.ForbiddenError("không có quyền xem hội thoại");
 
-  return msgRepository.getMessages(conversationId, beforeMessageId, limit);
+  return msgRepository.getMessages(
+    conversationId,
+    userId,
+    beforeMessageId,
+    limit
+  );
 };
 
 // gửi tin nhắn
@@ -78,18 +83,30 @@ export const markMessagesAsSeenService = async (conversationId, userId) => {
   return msgRepository.markMessagesAsSeen(conversationId, userId);
 };
 
-// xóa tin nhắn - thu hồi tin nhắn != xóa 1 chiều
-export const deleteMessageService = async (msgId, userId) => {
-  if (!msgId) throw new error.BadRequestError("thiếu id tin nhắn");
+// xoa tin nhan 1 chieu
+export const deleteMessageForMeService = async (msgId, userId) => {
+  const msg = await msgRepository.findMsgById(msgId);
 
-  const msg = await msgRepository.getMessageById(msgId);
+  if (!msg) throw new error.BadRequestError("không tim thấy tin nhắn");
 
-  if (!msg) throw new error.NotFoundError("tin nhắn không tồn tại");
+  await msgRepository.deleteMessageForMe(msgId, userId);
 
-  // chỉ người gửi được xóa
-  if (msg.sender.toString() !== userId)
-    throw new error.ForbiddenError("bạn không có quyền xóa tin nhắn này");
-
-  await msgRepository.deleteMessage(msgId);
   return true;
+};
+
+// thu hoi tin nhan - xoa 2 chieu
+export const revokeMessageService = async (msgId, userId) => {
+  const msg = await msgRepository.findMsgById(msgId);
+
+  if (!msg) throw new error.NotFoundError("không tim thấy tin nhắn");
+
+  if (msg.senderId.toString() !== userId.toString())
+    throw new error.ForbiddenError("chỉ người gửi mới được thu hồi");
+
+  msg.status = "revoked";
+  msg.revokedAt = new Date();
+  msg.content = null;
+  msg.fileUrl = null;
+
+  return await msgRepository.revokeMessage(msgId);
 };

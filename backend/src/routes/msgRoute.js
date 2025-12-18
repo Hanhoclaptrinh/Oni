@@ -11,6 +11,7 @@ router.patch("/:conversationId/seen", msgController.markMessagesAsSeenHandler);
 router.get("/:conversationId", msgController.getMessagesHandler);
 router.post("/:conversationId", msgController.sendMessageHandler);
 
-router.delete("/message/:msgId", msgController.deleteMessageHandler);
+router.patch("/:msgId/hide", msgController.deleteMessageForMeHandler);
+router.patch("/:msgId/revoke", msgController.revokeMessageHandler);
 
 export default router;

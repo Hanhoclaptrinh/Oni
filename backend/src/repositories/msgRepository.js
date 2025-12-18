@@ -1,13 +1,17 @@
 import Message from "../models/message.js";
 import Conversation from "../models/conversation.js";
 
+// tim tin nhan theo id
+export const findMsgById = (msgId) => Message.findById(msgId);
+
 // lấy lịch sử chat
 export const getMessages = (
   conversationId,
+  userId,
   beforeMessageId = null,
-  limit = 30
+  limit = 50
 ) => {
-  const query = { conversationId };
+  const query = { conversationId, hiddenFor: { $ne: userId } };
 
   if (beforeMessageId) {
     query._id = { $lt: beforeMessageId };
@@ -44,5 +48,27 @@ export const markMessagesAsSeen = async (conversationId, userId) =>
     { $addToSet: { seenBy: userId } } // tránh trùng khi seen nhiều lần
   );
 
-// xóa tin nhắn
-export const deleteMessage = (msgId) => Message.findByIdAndDelete(msgId);
+// xoa tin nhan 1 chieu
+export const deleteMessageForMe = async (msgId, userId) => {
+  return await Message.findByIdAndUpdate(
+    msgId,
+    {
+      $addToSet: { hiddenFor: userId },
+    },
+    { new: true }
+  );
+};
+
+// thu hoi tin nhan - xoa 2 chieu
+export const revokeMessage = async (msgId) => {
+  return await Message.findByIdAndUpdate(
+    msgId,
+    {
+      status: "revoked",
+      revokedAt: new Date(),
+      content: null,
+      fileUrl: null,
+    },
+    { new: true }
+  );
+};

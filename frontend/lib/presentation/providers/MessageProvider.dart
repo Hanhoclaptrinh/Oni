@@ -109,4 +109,32 @@ class MessageNotifier extends StateNotifier<AsyncValue<List<Message>>> {
       }).toList(),
     );
   }
+
+  // delete msg
+  void deleteMessage(String msgId) async {
+    // update
+    final current = state.value ?? [];
+    state = AsyncValue.data(current.where((m) => m.id != msgId).toList());
+
+    try {
+      final svc = ref.read(msgServiceProvider);
+      await svc.deleteMessageForMe(msgId);
+    } catch (e) {
+      state = AsyncValue.data(current);
+      rethrow;
+    }
+  }
+
+  // lang nghe tin nhan bi revoke tu socket
+  void onMessageRevoked(String msgId) {
+    final current = state.value ?? [];
+    state = AsyncValue.data(
+      current.map((m) {
+        if (m.id == msgId) {
+          return m.copyWith(status: "revoked", content: null, fileUrl: null);
+        }
+        return m;
+      }).toList(),
+    );
+  }
 }

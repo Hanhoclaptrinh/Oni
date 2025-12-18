@@ -39,6 +39,29 @@ const messageSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+
+    // danh dau trang thai tin nhan
+    // tin nhan normal hoac tin nhan da cuoc thu hoi
+    status: {
+      type: String,
+      enum: ["normal", "revoked"],
+      default: "normal",
+      index: true,
+    },
+
+    revokedAt: {
+      type: Date,
+      default: null,
+    },
+
+    // xoa 1 phia
+    // user nao duoc danh dau thi khong render UI
+    hiddenFor: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true }
 );
