@@ -79,7 +79,6 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                 ),
               ),
 
-              // 👉 EMPTY STATE
               if (filteredConvos.isEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
