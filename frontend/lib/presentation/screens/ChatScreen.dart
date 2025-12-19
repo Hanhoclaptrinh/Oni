@@ -110,9 +110,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     // thu hoi tin nhan socket
     socket.on("msg:revoke", (data) {
-      ref
-          .read(msgProvider(widget.conversation.id).notifier)
-          .onMessageRevoked(data["msgId"]);
+      try {
+        if (data["conversationId"] != widget.conversation.id) return;
+
+        ref
+            .read(msgProvider(widget.conversation.id).notifier)
+            .onMessageRevoked(data["msgId"].toString());
+      } catch (e, st) {
+        print("CRASH: $e");
+        print(st);
+      }
     });
   }
 

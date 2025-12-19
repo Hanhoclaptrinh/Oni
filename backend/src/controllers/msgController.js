@@ -98,9 +98,10 @@ export const revokeMessageHandler = async (req, res, next) => {
       throw new error.NotFoundError("hội thoại không tồn tại");
     }
 
-    req.io.to(msg.conversationId).emit("msg:revoke", {
-      conversationId: msg.conversationId,
-      msgId: msg._id,
+    req.io.to(msg.conversationId.toString()).emit("msg:revoke", {
+      conversationId: msg.conversationId.toString(),
+      msgId: msg._id.toString(),
+      status: "revoked",
     });
 
     return res.status(204).end();
