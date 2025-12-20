@@ -5,12 +5,14 @@ class LatestMessage {
   final String? content;
   final String type;
   final DateTime createdAt;
+  DateTime? editedAt;
 
   LatestMessage({
     required this.id,
     this.content,
     required this.type,
     required this.createdAt,
+    this.editedAt,
   });
 
   factory LatestMessage.fromJson(Map<String, dynamic> json) {
@@ -19,6 +21,9 @@ class LatestMessage {
       content: json["content"],
       type: json["status"] ?? json["type"] ?? "text",
       createdAt: DateTime.parse(json["createdAt"]),
+      editedAt: json["editedAt"] != null
+          ? DateTime.parse(json["editedAt"])
+          : DateTime.now(),
     );
   }
 
@@ -28,15 +33,17 @@ class LatestMessage {
       content: msg.content,
       type: msg.status,
       createdAt: msg.createdAt,
+      editedAt: msg.editedAt,
     );
   }
 
-  LatestMessage copyWith({String? content, String? type}) {
+  LatestMessage copyWith({String? content, String? type, DateTime? editedAt}) {
     return LatestMessage(
       id: id,
       content: content ?? this.content,
       type: type ?? this.type,
       createdAt: createdAt,
+      editedAt: editedAt,
     );
   }
 }

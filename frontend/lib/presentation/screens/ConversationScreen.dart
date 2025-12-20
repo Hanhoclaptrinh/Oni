@@ -48,6 +48,19 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
           .read(cvsProvider.notifier)
           .onMessageRevoked(data["conversationId"], data["msgId"]);
     });
+
+    socket.on("msg:edit", (data) {
+      ref
+          .read(cvsProvider.notifier)
+          .onMessageEdited(
+            conversationId: data["conversationId"],
+            msgId: data["msgId"],
+            content: data["content"],
+            editedAt: data["editedAt"] != null
+                ? DateTime.parse(data["editedAt"])
+                : DateTime.now(),
+          );
+    });
   }
 
   @override

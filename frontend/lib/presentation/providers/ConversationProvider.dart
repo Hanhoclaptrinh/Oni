@@ -88,4 +88,31 @@ class ConversationNotifier
       }).toList(),
     );
   }
+
+  void onMessageEdited({
+    required String conversationId,
+    required String msgId,
+    required String content,
+    DateTime? editedAt,
+  }) {
+    final current = state.value ?? [];
+
+    state = AsyncValue.data(
+      current.map((c) {
+        if (c.id != conversationId) return c;
+
+        // chi update neu tin nhan la latest msg
+        if (c.latestMessage?.id == msgId) {
+          return c.copyWith(
+            latestMessage: c.latestMessage!.copyWith(
+              content: content,
+              editedAt: editedAt ?? DateTime.now(),
+            ),
+          );
+        }
+
+        return c;
+      }).toList(),
+    );
+  }
 }
