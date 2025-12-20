@@ -9,6 +9,7 @@ class Message {
   final List<String> seenBy;
   final DateTime createdAt;
   final DateTime updatedAt;
+  DateTime? editedAt;
 
   Message({
     required this.id,
@@ -21,6 +22,7 @@ class Message {
     required this.seenBy,
     required this.createdAt,
     required this.updatedAt,
+    this.editedAt,
   });
 
   factory Message.fromJson(Map<String, dynamic> json) {
@@ -41,6 +43,9 @@ class Message {
       updatedAt: json["updatedAt"] != null
           ? DateTime.parse(json["updatedAt"])
           : DateTime.now(),
+      editedAt: json["editedAt"] != null
+          ? DateTime.parse(json["editedAt"])
+          : null,
     );
   }
 
@@ -56,6 +61,7 @@ class Message {
     List<String>? seenBy,
     DateTime? createdAt,
     DateTime? updatedAt,
+    DateTime? editedAt,
   }) => Message(
     id: id ?? this.id,
     conversationId: conversationId ?? this.conversationId,
@@ -67,5 +73,6 @@ class Message {
     seenBy: seenBy ?? this.seenBy,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    editedAt: editedAt ?? this.editedAt,
   );
 }

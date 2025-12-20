@@ -4,6 +4,8 @@ import 'package:frontend/data/models/Message.dart';
 import 'package:frontend/data/services/MessageService.dart';
 import 'package:frontend/presentation/providers/DioProvider.dart';
 
+final editingMessageProvider = StateProvider<Message?>((ref) => null);
+
 final msgServiceProvider = Provider((ref) {
   final dio = ref.watch(dioProvider);
   return MessageService(dio);
@@ -132,6 +134,23 @@ class MessageNotifier extends StateNotifier<AsyncValue<List<Message>>> {
       current.map((m) {
         if (m.id == msgId) {
           return m.copyWith(status: "revoked", content: null, fileUrl: null);
+        }
+        return m;
+      }).toList(),
+    );
+  }
+
+  // lang nghe tin nhan duoc chinh sua tu socket
+  void onMessageEdited({
+    required String msgId,
+    required String content,
+    DateTime? editedAt,
+  }) {
+    final current = state.value ?? [];
+    state = AsyncValue.data(
+      current.map((m) {
+        if (m.id == msgId) {
+          return m.copyWith(content: content, editedAt: editedAt);
         }
         return m;
       }).toList(),

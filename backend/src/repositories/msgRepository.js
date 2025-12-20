@@ -48,6 +48,22 @@ export const markMessagesAsSeen = async (conversationId, userId) =>
     { $addToSet: { seenBy: userId } } // tránh trùng khi seen nhiều lần
   );
 
+// chinh sua noi dung tin nhan
+export const editMessage = async (msgId, userId, content) => {
+  return await Message.findOneAndUpdate(
+    {
+      _id: msgId,
+      senderId: userId,
+      deletedAt: null,
+    },
+    {
+      content,
+      editedAt: new Date(),
+    },
+    { new: true }
+  );
+};
+
 // xoa tin nhan 1 chieu
 export const deleteMessageForMe = async (msgId, userId) => {
   return await Message.findByIdAndUpdate(

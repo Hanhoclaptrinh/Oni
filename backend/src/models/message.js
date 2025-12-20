@@ -62,6 +62,12 @@ const messageSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+
+    // thoi gian chinh sua tin nhan
+    editedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

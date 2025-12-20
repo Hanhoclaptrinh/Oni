@@ -83,6 +83,31 @@ export const markMessagesAsSeenService = async (conversationId, userId) => {
   return msgRepository.markMessagesAsSeen(conversationId, userId);
 };
 
+// chinh sua noi dung tin nhan
+export const editMessageService = async (msgId, content, userId) => {
+  if (!msgId) {
+    throw new error.BadRequestError("thiếu id tin nhắn");
+  }
+
+  if (!content || !content.trim()) {
+    throw new error.BadRequestError("nội dung không hợp lệ");
+  }
+
+  const updatedMsg = await msgRepository.editMessage(
+    msgId,
+    userId,
+    content.trim()
+  );
+
+  if (!updatedMsg) {
+    throw new error.ForbiddenError(
+      "không tồn tại tin nhắn hoặc không có quyền chỉnh sửa"
+    );
+  }
+
+  return updatedMsg;
+};
+
 // xoa tin nhan 1 chieu
 export const deleteMessageForMeService = async (msgId, userId) => {
   const msg = await msgRepository.findMsgById(msgId);

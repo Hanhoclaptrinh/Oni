@@ -14,6 +14,7 @@ import 'package:frontend/presentation/providers/MessageProvider.dart';
 import 'package:frontend/presentation/providers/UserProvider.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:logger/logger.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final Conversation conversation;
@@ -117,8 +118,28 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             .read(msgProvider(widget.conversation.id).notifier)
             .onMessageRevoked(data["msgId"].toString());
       } catch (e, st) {
-        print("CRASH: $e");
-        print(st);
+        Logger().e("CRASH: $e");
+        Logger().e(st);
+      }
+    });
+
+    // chinh sua tin nhan socket
+    socket.on("msg:edit", (data) {
+      try {
+        if (data["conversationId"] != widget.conversation.id) return;
+
+        ref
+            .read(msgProvider(widget.conversation.id).notifier)
+            .onMessageEdited(
+              msgId: data["msgId"].toString(),
+              content: data["content"],
+              editedAt: data["editedAt"] != null
+                  ? DateTime.parse(data["editedAt"])
+                  : DateTime.now(),
+            );
+      } catch (e, st) {
+        Logger().e("CRASH: $e");
+        Logger().e(st);
       }
     });
   }
@@ -139,16 +160,33 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   // handle send
-  void _handleSend() {
+  void _handleSend() async {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
 
-    socket.emit("send_message", {
-      "conversationId": widget.conversation.id,
-      "type": "text",
-      "content": text,
-    });
+    final editingMsg = ref.read(editingMessageProvider);
+    if (editingMsg != null) {
+      // update
+      ref
+          .read(msgProvider(widget.conversation.id).notifier)
+          .onMessageEdited(
+            msgId: editingMsg.id,
+            content: text,
+            editedAt: DateTime.now(),
+          );
 
+      // edit req
+      await ref.read(msgServiceProvider).editMessage(editingMsg.id, text);
+
+      // reset
+      ref.read(editingMessageProvider.notifier).state = null;
+    } else {
+      socket.emit("send_message", {
+        "conversationId": widget.conversation.id,
+        "type": "text",
+        "content": text,
+      });
+    }
     _textController.clear();
   }
 
@@ -415,6 +453,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       );
     }
 
+    void _handleEdit(Message msg) {
+      // set trang thai dang edit
+      ref.read(editingMessageProvider.notifier).state = msg;
+
+      // dua noi dung tin nhan cu vao input
+      _textController.text = msg.content ?? "";
+      _textController.selection = TextSelection.fromPosition(
+        TextPosition(offset: _textController.text.length),
+      );
+    }
+
     void _handleAction(String value, String text) {
       switch (value) {
         case 'copy':
@@ -423,7 +472,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                "Đã sao chép văn bản vào bộ nhớ đệm",
+                "Đã sao chép văn bản vào bộ nhớ tạm",
                 style: TextStyle(color: Colors.black),
               ),
               backgroundColor: Colors.white,
@@ -431,7 +480,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           );
           break;
         case 'edit':
-          print("Mở chế độ chỉnh sửa cho: $text");
+          _handleEdit(msg);
           break;
         case "reply":
           print("Trả lời tin nhắn");
