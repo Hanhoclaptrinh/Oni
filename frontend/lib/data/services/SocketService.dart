@@ -44,22 +44,6 @@ class SocketService {
         _friendOnlineController.add(uid.toString());
       });
 
-      socket!.on("new_message_global", (data) {
-        Logger().i("new msg glo event: $data");
-
-        if (data is Map<String, dynamic>) {
-          _messageController.add(data);
-        }
-      });
-
-      socket!.on("new_message", (data) {
-        Logger().i("new_message event: $data");
-
-        if (data is Map<String, dynamic>) {
-          _messageController.add(data);
-        }
-      });
-
       socket!.on("user_offline", (uid) {
         Logger().i("user_offline event: $uid");
         _friendOfflineController.add(uid.toString());

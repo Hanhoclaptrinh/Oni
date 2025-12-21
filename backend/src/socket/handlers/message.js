@@ -35,8 +35,6 @@ export default function registerMessageHandler(io, socket) {
 
       for (const memberId of members) {
         if (memberId.toString() === senderId.toString()) continue;
-
-        io.to(memberId.toString()).emit("new_message_global", message);
       }
     } catch (err) {
       console.error("Socket send_message:", err.message);
@@ -104,7 +102,18 @@ export default function registerMessageHandler(io, socket) {
       // emit global update conversation list
       for (const memberId of msg.members ?? []) {
         if (memberId.toString() === userId.toString()) continue;
-        io.to(memberId.toString()).emit("convos:update", msg);
+        io.to(memberId.toString()).emit("convos:update", {
+          conversationId: msg.conversationId.toString(),
+          latestMessage: {
+            _id: msg._id.toString(),
+            content: msg.content,
+            type: msg.type,
+            senderId: msg.senderId.toString(),
+            createdAt: msg.createdAt,
+            editedAt: msg.editedAt,
+            isMine: false,
+          },
+        });
       }
     } catch (err) {
       console.error("Socket edit_message:", err.message);
@@ -131,7 +140,18 @@ export default function registerMessageHandler(io, socket) {
       // emit global update conversation list
       for (const memberId of msg.members ?? []) {
         if (memberId.toString() === userId.toString()) continue;
-        io.to(memberId.toString()).emit("convos:update", msg);
+        io.to(memberId.toString()).emit("convos:update", {
+          conversationId: msg.conversationId.toString(),
+          latestMessage: {
+            _id: msg._id.toString(),
+            content: msg.content,
+            type: msg.type,
+            senderId: msg.senderId.toString(),
+            createdAt: msg.createdAt,
+            editedAt: msg.editedAt,
+            isMine: false,
+          },
+        });
       }
     } catch (err) {
       console.error("Socket revoke_message:", err.message);
@@ -162,7 +182,18 @@ export default function registerMessageHandler(io, socket) {
       // emit global update conversation list
       for (const memberId of msg.members ?? []) {
         if (memberId.toString() === senderId.toString()) continue;
-        io.to(memberId.toString()).emit("convos:update", msg);
+        io.to(memberId.toString()).emit("convos:update", {
+          conversationId: msg.conversationId.toString(),
+          latestMessage: {
+            _id: msg._id.toString(),
+            content: msg.content,
+            type: msg.type,
+            senderId: msg.senderId.toString(),
+            createdAt: msg.createdAt,
+            editedAt: msg.editedAt,
+            isMine: false,
+          },
+        });
       }
     } catch (err) {
       console.error("Socket reply_message:", err.message);

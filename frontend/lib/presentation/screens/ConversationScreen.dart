@@ -43,24 +43,21 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
 
     socket = SocketService().socket!;
 
-    socket.on("msg:revoke", (data) {
+    socket.on("convos:update", (data) {
       ref
           .read(cvsProvider.notifier)
-          .onMessageRevoked(data["conversationId"], data["msgId"]);
-    });
-
-    socket.on("msg:edit", (data) {
-      ref
-          .read(cvsProvider.notifier)
-          .onMessageEdited(
+          .onConversationUpdate(
             conversationId: data["conversationId"],
-            msgId: data["msgId"],
-            content: data["content"],
-            editedAt: data["editedAt"] != null
-                ? DateTime.parse(data["editedAt"])
-                : DateTime.now(),
+            latestMessage: data["latestMessage"],
           );
     });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    socket.off("convos:update");
   }
 
   @override
@@ -187,9 +184,25 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     );
   }
 
-  // list hội thoại
+  String _buildLastMessageText(Conversation c) {
+    final lm = c.latestMessage;
+
+    if (lm == null || lm.content == null || lm.content!.isEmpty) {
+      return "Bắt đầu cuộc trò chuyện";
+    }
+
+    if (lm.type == "revoked") {
+      return "Tin nhắn đã bị thu hồi";
+    }
+
+    if (lm.isMine) {
+      return "Bạn: ${lm.content}";
+    }
+
+    return lm.content!;
+  }
+
   Widget _buildConversationItem(BuildContext context, Conversation c) {
-    // private chat -> dùng otherUser
     final isPrivate = c.type == "private";
     final displayName = isPrivate
         ? c.otherUser?.displayName ?? "Người lạ"
@@ -197,16 +210,14 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
 
     final String? avatar = isPrivate ? c.otherUser?.avatarUrl : c.avatarUrl;
 
-    final lastMsg = c.latestMessage?.content ?? "Bắt đầu cuộc trò chuyện";
-
     final isUnread = c.hasUnread;
+    final lastMsgText = _buildLastMessageText(c);
 
     return GestureDetector(
       onTap: () async {
-        ref.read(cvsProvider.notifier).markAsRead(c.id); // clear unread
+        ref.read(cvsProvider.notifier).markAsRead(c.id);
 
         await ref.read(skSsServiceProvider).ensureValidSocketSession();
-
         if (!context.mounted) return;
 
         Navigator.push(
@@ -243,7 +254,9 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    lastMsg,
+                    lastMsgText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: isUnread
@@ -251,8 +264,6 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                           : FontWeight.normal,
                       color: isUnread ? AppColors.textDark : AppColors.textGrey,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

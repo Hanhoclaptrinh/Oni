@@ -149,10 +149,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // leave room
     socket.emit("leave_conversation", widget.conversation.id);
 
+    // remove listeners
     socket.off("new_message");
     socket.off("messages_seen");
     socket.off("user_typing");
     socket.off("user_stop_typing");
+    socket.off("msg:revoked");
+    socket.off("msg:edited");
 
     _typingTimer?.cancel();
     _textController.dispose();

@@ -46,7 +46,7 @@ class ConversationNotifier
     final isMine = msg.senderId == myUserId;
 
     final updated = conv.copyWith(
-      latestMessage: LatestMessage.fromMessage(msg),
+      latestMessage: LatestMessage.fromMessage(msg, isMine),
       hasUnread: !isMine,
     );
 
@@ -67,52 +67,20 @@ class ConversationNotifier
     });
   }
 
-  void onMessageRevoked(String conversationId, String msgId) {
-    final current = state.value ?? [];
-
-    state = AsyncValue.data(
-      current.map((c) {
-        if (c.id != conversationId) return c;
-
-        // neu msg bi revoke la last msg
-        if (c.latestMessage?.id == msgId) {
-          return c.copyWith(
-            latestMessage: c.latestMessage!.copyWith(
-              content: "Tin nhắn đã được thu hồi",
-              type: "revoked",
-            ),
-          );
-        }
-
-        return c;
-      }).toList(),
-    );
-  }
-
-  void onMessageEdited({
+  void onConversationUpdate({
     required String conversationId,
-    required String msgId,
-    required String content,
-    DateTime? editedAt,
+    required LatestMessage latestMessage,
   }) {
-    final current = state.value ?? [];
-
-    state = AsyncValue.data(
-      current.map((c) {
-        if (c.id != conversationId) return c;
-
-        // chi update neu tin nhan la latest msg
-        if (c.latestMessage?.id == msgId) {
+    state = state.whenData((list) {
+      return list.map((c) {
+        if (c.id == conversationId) {
           return c.copyWith(
-            latestMessage: c.latestMessage!.copyWith(
-              content: content,
-              editedAt: editedAt ?? DateTime.now(),
-            ),
+            latestMessage: latestMessage,
+            hasUnread: !latestMessage.isMine,
           );
         }
-
         return c;
-      }).toList(),
-    );
+      }).toList();
+    });
   }
 }

@@ -6,6 +6,7 @@ class LatestMessage {
   final String type;
   final DateTime createdAt;
   DateTime? editedAt;
+  final bool isMine;
 
   LatestMessage({
     required this.id,
@@ -13,6 +14,7 @@ class LatestMessage {
     required this.type,
     required this.createdAt,
     this.editedAt,
+    required this.isMine,
   });
 
   factory LatestMessage.fromJson(Map<String, dynamic> json) {
@@ -23,17 +25,19 @@ class LatestMessage {
       createdAt: DateTime.parse(json["createdAt"]),
       editedAt: json["editedAt"] != null
           ? DateTime.parse(json["editedAt"])
-          : DateTime.now(),
+          : null,
+      isMine: json["isMine"] ?? false,
     );
   }
 
-  factory LatestMessage.fromMessage(Message msg) {
+  factory LatestMessage.fromMessage(Message msg, bool isMine) {
     return LatestMessage(
       id: msg.id,
       content: msg.content,
       type: msg.status,
       createdAt: msg.createdAt,
       editedAt: msg.editedAt,
+      isMine: isMine,
     );
   }
 
@@ -44,6 +48,7 @@ class LatestMessage {
       type: type ?? this.type,
       createdAt: createdAt,
       editedAt: editedAt,
+      isMine: isMine,
     );
   }
 }
