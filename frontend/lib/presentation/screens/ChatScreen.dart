@@ -110,7 +110,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     });
 
     // thu hoi tin nhan socket
-    socket.on("msg:revoke", (data) {
+    socket.on("msg:revoked", (data) {
       try {
         if (data["conversationId"] != widget.conversation.id) return;
 
@@ -124,7 +124,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     });
 
     // chinh sua tin nhan socket
-    socket.on("msg:edit", (data) {
+    socket.on("msg:edited", (data) {
       try {
         if (data["conversationId"] != widget.conversation.id) return;
 
@@ -166,17 +166,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     final editingMsg = ref.read(editingMessageProvider);
     if (editingMsg != null) {
-      // update
-      ref
-          .read(msgProvider(widget.conversation.id).notifier)
-          .onMessageEdited(
-            msgId: editingMsg.id,
-            content: text,
-            editedAt: DateTime.now(),
-          );
-
-      // edit req
-      await ref.read(msgServiceProvider).editMessage(editingMsg.id, text);
+      // chinh sua tin nhan
+      socket.emit("edit_message", {"msgId": editingMsg.id, "content": text});
 
       // reset
       ref.read(editingMessageProvider.notifier).state = null;
@@ -645,13 +636,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
               ),
               onPressed: () async {
-                // update UI
-                ref
-                    .read(msgProvider(widget.conversation.id).notifier)
-                    .onMessageRevoked(msgId);
-
-                // logic thu hoi tin nhan
-                await ref.read(msgServiceProvider).revokeMessage(msgId);
+                // thu hoi tin nhan
+                socket.emit("revoke_message", {"msgId": msgId});
 
                 if (!mounted) return;
 

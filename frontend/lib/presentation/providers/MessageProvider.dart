@@ -78,21 +78,6 @@ class MessageNotifier extends StateNotifier<AsyncValue<List<Message>>> {
     }
   }
 
-  // => chi load duoc 1 lan duy nhat
-  // Future<void> _loadMessages() async {
-  //   try {
-  //     final svc = ref.read(msgServiceProvider);
-  //     final msgs = await svc.getMessages(conversationId);
-
-  //     if (!mounted) return;
-
-  //     state = AsyncValue.data(msgs);
-  //   } catch (e, st) {
-  //     if (!mounted) return;
-  //     state = AsyncValue.error(e, st);
-  //   }
-  // }
-
   // tin nhan moi - socket
   void addMessage(Message msg) {
     final current = state.value ?? [];

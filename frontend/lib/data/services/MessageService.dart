@@ -25,14 +25,4 @@ class MessageService {
   Future<void> deleteMessageForMe(String msgId) async {
     await dio.patch("/messages/$msgId/hide");
   }
-
-  // thu hoi tin nhan
-  Future<void> revokeMessage(String msgId) async {
-    await dio.patch("/messages/$msgId/revoke");
-  }
-
-  // chinh sua tin nhan
-  Future<void> editMessage(String msgId, String content) async {
-    await dio.patch("/messages/$msgId/edit", data: {"content": content});
-  }
 }

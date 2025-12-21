@@ -70,31 +70,6 @@ export const markMessagesAsSeenHandler = async (req, res, next) => {
   }
 };
 
-export const editMessageHandler = async (req, res, next) => {
-  try {
-    const userId = req.user.id;
-    const { msgId } = req.params;
-    const { content } = req.body;
-
-    const msg = await msgService.editMessageService(msgId, content, userId);
-
-    // socket
-    req.io.to(msg.conversationId.toString()).emit("msg:edit", {
-      conversationId: msg.conversationId.toString(),
-      msgId: msg._id.toString(),
-      content: msg.content,
-      editedAt: msg.editedAt,
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "chỉnh sửa tin nhắn thành công",
-    });
-  } catch (e) {
-    next(e);
-  }
-};
-
 export const deleteMessageForMeHandler = async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -103,64 +78,6 @@ export const deleteMessageForMeHandler = async (req, res, next) => {
     await msgService.deleteMessageForMeService(msgId, userId);
 
     return res.status(204).end();
-  } catch (e) {
-    next(e);
-  }
-};
-
-export const revokeMessageHandler = async (req, res, next) => {
-  try {
-    const userId = req.user.id;
-    const { msgId } = req.params;
-
-    const msg = await msgService.revokeMessageService(msgId, userId);
-    if (!msg) {
-      throw new error.NotFoundError("tin nhắn không tồn tại");
-    }
-
-    req.io.to(msg.conversationId.toString()).emit("msg:revoke", {
-      conversationId: msg.conversationId.toString(),
-      msgId: msg._id.toString(),
-      status: "revoked",
-    });
-
-    return res.status(204).end();
-  } catch (e) {
-    next(e);
-  }
-};
-export const replyToMessageHandler = async (req, res, next) => {
-  try {
-    const userId = req.user.id;
-    const { conversationId, msgId } = req.params;
-    const { type = "text", content = null, fileUrl = null } = req.body;
-
-    const payload = { type, content, fileUrl };
-
-    const msg = await msgService.replyToMessageService(
-      conversationId,
-      msgId,
-      userId,
-      payload
-    );
-
-    // socket
-    req.io.to(conversationId).emit("msg:reply", {
-      _id: msg._id.toString(),
-      conversationId,
-      senderId: msg.senderId.toString(),
-      type: msg.type,
-      content: msg.content,
-      fileUrl: msg.fileUrl || null,
-      replyTo: msg.replyTo || null,
-      createdAt: msg.createdAt,
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "reply tin nhắn thành công",
-      data: msg,
-    });
   } catch (e) {
     next(e);
   }

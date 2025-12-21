@@ -95,7 +95,6 @@ const messageSchema = new mongoose.Schema(
           default: null,
         },
       },
-      default: null,
     },
   },
   { timestamps: true }

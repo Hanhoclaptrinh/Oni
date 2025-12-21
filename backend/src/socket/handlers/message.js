@@ -1,6 +1,9 @@
 import {
   sendMessageService,
   markMessagesAsSeenService,
+  replyToMessageService,
+  revokeMessageService,
+  editMessageService,
 } from "../../services/msgService.js";
 
 export default function registerMessageHandler(io, socket) {
@@ -76,5 +79,94 @@ export default function registerMessageHandler(io, socket) {
       conversationId,
       userId: socket.userId,
     });
+  });
+
+  // chinh sua tin nhan
+  socket.on("edit_message", async ({ msgId, content }) => {
+    try {
+      const userId = socket.userId;
+
+      const msg = await editMessageService(msgId, content, userId);
+
+      if (!msg) {
+        console.log("tin nhan khong ton tai");
+        return;
+      }
+
+      // emit trong room chat
+      io.to(msg.conversationId.toString()).emit("msg:edited", {
+        conversationId: msg.conversationId.toString(),
+        msgId: msg._id.toString(),
+        content: msg.content,
+        editedAt: msg.editedAt,
+      });
+
+      // emit global update conversation list
+      for (const memberId of msg.members ?? []) {
+        if (memberId.toString() === userId.toString()) continue;
+        io.to(memberId.toString()).emit("convos:update", msg);
+      }
+    } catch (err) {
+      console.error("Socket edit_message:", err.message);
+    }
+  });
+
+  // thu hoi tin nhan
+  socket.on("revoke_message", async ({ msgId }) => {
+    try {
+      const userId = socket.userId;
+
+      const msg = await revokeMessageService(msgId, userId);
+      if (!msg) {
+        console.log("tin nhan khong ton tai");
+        return;
+      }
+
+      io.to(msg.conversationId.toString()).emit("msg:revoked", {
+        conversationId: msg.conversationId.toString(),
+        msgId: msg._id.toString(),
+        status: "revoked",
+      });
+
+      // emit global update conversation list
+      for (const memberId of msg.members ?? []) {
+        if (memberId.toString() === userId.toString()) continue;
+        io.to(memberId.toString()).emit("convos:update", msg);
+      }
+    } catch (err) {
+      console.error("Socket revoke_message:", err.message);
+    }
+  });
+
+  // tra loi tin nhan
+  socket.on("reply_message", async (payload) => {
+    try {
+      const senderId = socket.userId;
+      const { conversationId, msgId } = payload;
+
+      if (!conversationId || !msgId || !senderId) {
+        console.log("thieu du lieu reply message");
+        return;
+      }
+
+      const msg = await replyToMessageService(
+        conversationId,
+        msgId,
+        senderId,
+        payload
+      );
+
+      // emit trong room chat
+      io.to(conversationId).emit("msg:replied", msg);
+
+      // emit global update conversation list
+      for (const memberId of msg.members ?? []) {
+        if (memberId.toString() === senderId.toString()) continue;
+        io.to(memberId.toString()).emit("convos:update", msg);
+      }
+    } catch (err) {
+      console.error("Socket reply_message:", err.message);
+      socket.emit("error", err.message);
+    }
   });
 }
