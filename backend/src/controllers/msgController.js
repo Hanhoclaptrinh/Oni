@@ -129,3 +129,39 @@ export const revokeMessageHandler = async (req, res, next) => {
     next(e);
   }
 };
+export const replyToMessageHandler = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { conversationId, msgId } = req.params;
+    const { type = "text", content = null, fileUrl = null } = req.body;
+
+    const payload = { type, content, fileUrl };
+
+    const msg = await msgService.replyToMessageService(
+      conversationId,
+      msgId,
+      userId,
+      payload
+    );
+
+    // socket
+    req.io.to(conversationId).emit("msg:reply", {
+      _id: msg._id.toString(),
+      conversationId,
+      senderId: msg.senderId.toString(),
+      type: msg.type,
+      content: msg.content,
+      fileUrl: msg.fileUrl || null,
+      replyTo: msg.replyTo || null,
+      createdAt: msg.createdAt,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "reply tin nhắn thành công",
+      data: msg,
+    });
+  } catch (e) {
+    next(e);
+  }
+};

@@ -135,3 +135,22 @@ export const revokeMessageService = async (msgId, userId) => {
 
   return await msgRepository.revokeMessage(msgId);
 };
+
+// tra loi tin nhan
+export const replyToMessageService = async (
+  conversationId,
+  msgId,
+  userId,
+  payload
+) => {
+  const oMsg = await msgRepository.findOriginalMsg(conversationId, msgId);
+
+  if (!oMsg) throw new error.BadRequestError("không tim thấy tin nhắn");
+
+  return await msgRepository.replyToMessage(
+    conversationId,
+    msgId,
+    userId,
+    payload
+  );
+};

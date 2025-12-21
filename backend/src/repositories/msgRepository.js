@@ -4,6 +4,14 @@ import Conversation from "../models/conversation.js";
 // tim tin nhan theo id
 export const findMsgById = (msgId) => Message.findById(msgId);
 
+// tim tin nhan goc
+export const findOriginalMsg = async (conversationId, msgId) => {
+  return await Message.findOne({
+    conversationId,
+    _id: msgId,
+  }).select("sender content type fileUrl");
+};
+
 // lấy lịch sử chat
 export const getMessages = (
   conversationId,
@@ -87,4 +95,28 @@ export const revokeMessage = async (msgId) => {
     },
     { new: true }
   );
+};
+
+// tra loi tin nhan
+export const replyToMessage = async (
+  conversationId,
+  msgId,
+  userId,
+  payload
+) => {
+  // msg reply
+  return await Message.create({
+    conversationId,
+    senderId: userId,
+    content: payload.content || null,
+    fileUrl: payload.fileUrl || null,
+    type: oMsg.type,
+    replyTo: {
+      messageId: oMsg._id,
+      senderId: oMsg.senderId,
+      type: oMsg.type,
+      content: oMsg.content,
+      fileUrl: oMsg.fileUrl,
+    },
+  });
 };
