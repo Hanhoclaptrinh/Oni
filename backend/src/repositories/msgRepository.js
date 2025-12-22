@@ -9,7 +9,7 @@ export const findOriginalMsg = async (conversationId, msgId) => {
   return await Message.findOne({
     conversationId,
     _id: msgId,
-  }).select("sender content type fileUrl");
+  }).select("senderId content type fileUrl");
 };
 
 // lấy lịch sử chat
@@ -36,6 +36,7 @@ export const sendMessage = async (conversationId, senderId, payload) => {
     type: payload.type || "text",
     content: payload.content || null,
     fileUrl: payload.fileUrl || null,
+    replyTo: payload.replyTo || null,
   });
 
   await Conversation.findByIdAndUpdate(conversationId, {
@@ -95,28 +96,4 @@ export const revokeMessage = async (msgId) => {
     },
     { new: true }
   );
-};
-
-// tra loi tin nhan
-export const replyToMessage = async (
-  conversationId,
-  msgId,
-  userId,
-  payload
-) => {
-  // msg reply
-  return await Message.create({
-    conversationId,
-    senderId: userId,
-    content: payload.content || null,
-    fileUrl: payload.fileUrl || null,
-    type: oMsg.type,
-    replyTo: {
-      messageId: oMsg._id,
-      senderId: oMsg.senderId,
-      type: oMsg.type,
-      content: oMsg.content,
-      fileUrl: oMsg.fileUrl,
-    },
-  });
 };

@@ -31,18 +31,42 @@ export const getMessagesService = async (
 
 // gửi tin nhắn
 export const sendMessageService = async (conversationId, senderId, payload) => {
+  const type = payload.type ?? "text";
+
   // validate
   if (!conversationId) throw new error.BadRequestError("thiếu id hội thoại");
   if (!senderId) throw new error.BadRequestError("thiếu id người gửi");
 
-  if (payload.type === "text" && !payload.content)
+  if (type === "text" && !payload.content?.trim()) {
     throw new error.BadRequestError("tin nhắn text không được rỗng");
+  }
 
-  if (payload.type !== "text" && !payload.fileUrl)
+  if (type !== "text" && !payload.fileUrl) {
     throw new error.BadRequestError("tin nhắn file phải có fileUrl");
+  }
 
   const conversation = await cvsRepository.findConversationById(conversationId);
   if (!conversation) throw new error.NotFoundError("hội thoại không tồn tại");
+
+  if (payload.replyTo?.messageId) {
+    const originalMsg = await msgRepository.findOriginalMsg(
+      conversationId,
+      payload.replyTo.messageId
+    );
+
+    if (!originalMsg) {
+      throw new error.BadRequestError("tin nhắn được trả lời không tồn tại");
+    }
+
+    // optional: đồng bộ lại replyTo từ DB cho an toàn
+    payload.replyTo = {
+      messageId: originalMsg._id,
+      senderId: originalMsg.senderId,
+      type: originalMsg.type,
+      content: originalMsg.content,
+      fileUrl: originalMsg.fileUrl ?? null,
+    };
+  }
 
   // chat nhóm - kiểm tra là thành viên trong nhóm
   const isMember = conversation.members
@@ -134,23 +158,4 @@ export const revokeMessageService = async (msgId, userId) => {
   msg.fileUrl = null;
 
   return await msgRepository.revokeMessage(msgId);
-};
-
-// tra loi tin nhan
-export const replyToMessageService = async (
-  conversationId,
-  msgId,
-  userId,
-  payload
-) => {
-  const oMsg = await msgRepository.findOriginalMsg(conversationId, msgId);
-
-  if (!oMsg) throw new error.BadRequestError("không tim thấy tin nhắn");
-
-  return await msgRepository.replyToMessage(
-    conversationId,
-    msgId,
-    userId,
-    payload
-  );
 };

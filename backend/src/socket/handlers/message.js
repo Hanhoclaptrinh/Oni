@@ -12,29 +12,39 @@ export default function registerMessageHandler(io, socket) {
   // gui tin nhan
   socket.on("send_message", async (payload) => {
     try {
-      const { conversationId, type, content, fileUrl } = payload;
+      const { conversationId } = payload;
       const senderId = socket.userId; // lấy từ middleware
 
-      if (!conversationId || !senderId) {
-        console.log("thiếu dữ liệu tin nhắn");
-      }
+      if (!conversationId || !senderId) return;
 
       // luu tin nhan vao db
+      // payload co the co replyto hoac khong co
+      // neu co replyto => xu ly reply
+      // khong co => xu ly gui tin nhan
       const { message, members } = await sendMessageService(
         conversationId,
         senderId,
         payload
       );
 
-      console.log(
-        `Message sent in conversation ${conversationId} by ${senderId}`
-      );
-
       // emit tin nhan den room
       io.to(conversationId).emit("new_message", message);
 
+      // update convos list
       for (const memberId of members) {
         if (memberId.toString() === senderId.toString()) continue;
+
+        io.to(memberId.toString()).emit("convos:update", {
+          conversationId: conversationId.toString(),
+          lastMessage: {
+            _id: message._id.toString(),
+            content: message.content,
+            type: message.type,
+            createdAt: message.createdAt,
+            editedAt: message.editedAt,
+            isMine: false,
+          },
+        });
       }
     } catch (err) {
       console.error("Socket send_message:", err.message);
@@ -155,49 +165,6 @@ export default function registerMessageHandler(io, socket) {
       }
     } catch (err) {
       console.error("Socket revoke_message:", err.message);
-    }
-  });
-
-  // tra loi tin nhan
-  socket.on("reply_message", async (payload) => {
-    try {
-      const senderId = socket.userId;
-      const { conversationId, msgId } = payload;
-
-      if (!conversationId || !msgId || !senderId) {
-        console.log("thieu du lieu reply message");
-        return;
-      }
-
-      const msg = await replyToMessageService(
-        conversationId,
-        msgId,
-        senderId,
-        payload
-      );
-
-      // emit trong room chat
-      io.to(conversationId).emit("msg:replied", msg);
-
-      // emit global update conversation list
-      for (const memberId of msg.members ?? []) {
-        if (memberId.toString() === senderId.toString()) continue;
-        io.to(memberId.toString()).emit("convos:update", {
-          conversationId: msg.conversationId.toString(),
-          latestMessage: {
-            _id: msg._id.toString(),
-            content: msg.content,
-            type: msg.type,
-            senderId: msg.senderId.toString(),
-            createdAt: msg.createdAt,
-            editedAt: msg.editedAt,
-            isMine: false,
-          },
-        });
-      }
-    } catch (err) {
-      console.error("Socket reply_message:", err.message);
-      socket.emit("error", err.message);
     }
   });
 }

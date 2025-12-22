@@ -1,3 +1,5 @@
+import 'package:frontend/data/models/ReplyTo.dart';
+
 class Message {
   final String id;
   final String conversationId;
@@ -10,6 +12,7 @@ class Message {
   final DateTime createdAt;
   final DateTime updatedAt;
   DateTime? editedAt;
+  final ReplyTo? replyTo;
 
   Message({
     required this.id,
@@ -23,6 +26,7 @@ class Message {
     required this.createdAt,
     required this.updatedAt,
     this.editedAt,
+    this.replyTo,
   });
 
   factory Message.fromJson(Map<String, dynamic> json) {
@@ -46,6 +50,9 @@ class Message {
       editedAt: json["editedAt"] != null
           ? DateTime.parse(json["editedAt"])
           : null,
+      replyTo: json["replyTo"] != null
+          ? ReplyTo.fromJson(json["replyTo"])
+          : null,
     );
   }
 
@@ -62,6 +69,7 @@ class Message {
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? editedAt,
+    ReplyTo? replyTo,
   }) => Message(
     id: id ?? this.id,
     conversationId: conversationId ?? this.conversationId,
@@ -74,5 +82,6 @@ class Message {
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     editedAt: editedAt ?? this.editedAt,
+    replyTo: replyTo ?? this.replyTo,
   );
 }
