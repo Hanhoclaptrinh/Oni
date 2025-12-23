@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -8,18 +10,36 @@ import 'package:frontend/presentation/screens/SplashScreen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  SystemChrome.setSystemUIOverlayStyle(
-    SystemUiOverlayStyle(
-      statusBarColor: Colors.white,
-      statusBarIconBrightness: Brightness.dark,
-      systemNavigationBarColor: Colors.white,
-      systemNavigationBarIconBrightness: Brightness.dark,
-    ),
+  // bắt lỗi Flutter
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    debugPrint("🔥 FLUTTER ERROR");
+    debugPrint(details.exceptionAsString());
+    debugPrint(details.stack.toString());
+  };
+
+  // bắt lỗi ngoài zone (async, socket, isolate)
+  runZonedGuarded(
+    () async {
+      SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(
+          statusBarColor: Colors.white,
+          statusBarIconBrightness: Brightness.dark,
+          systemNavigationBarColor: Colors.white,
+          systemNavigationBarIconBrightness: Brightness.dark,
+        ),
+      );
+
+      await dotenv.load(fileName: ".env");
+
+      runApp(const ProviderScope(child: MyApp()));
+    },
+    (error, stack) {
+      debugPrint("ZONED ERROR - APP CRASH");
+      debugPrint(error.toString());
+      debugPrint(stack.toString());
+    },
   );
-
-  await dotenv.load(fileName: ".env");
-
-  runApp(ProviderScope(child: MyApp()));
 }
 
 class MyApp extends ConsumerWidget {

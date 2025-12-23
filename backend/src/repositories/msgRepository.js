@@ -34,9 +34,9 @@ export const sendMessage = async (conversationId, senderId, payload) => {
     conversationId,
     senderId,
     type: payload.type || "text",
-    content: payload.content || null,
-    fileUrl: payload.fileUrl || null,
-    replyTo: payload.replyTo || null,
+    content: payload.content ?? null,
+    fileUrl: payload.fileUrl ?? null,
+    replyTo: payload.replyTo?.messageId ?? payload.replyTo ?? null,
   });
 
   await Conversation.findByIdAndUpdate(conversationId, {
@@ -63,7 +63,7 @@ export const editMessage = async (msgId, userId, content) => {
     {
       _id: msgId,
       senderId: userId,
-      deletedAt: null,
+      status: "normal",
     },
     {
       content,

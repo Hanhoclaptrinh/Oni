@@ -1,7 +1,6 @@
 import {
   sendMessageService,
   markMessagesAsSeenService,
-  replyToMessageService,
   revokeMessageService,
   editMessageService,
 } from "../../services/msgService.js";
@@ -17,18 +16,28 @@ export default function registerMessageHandler(io, socket) {
 
       if (!conversationId || !senderId) return;
 
-      // luu tin nhan vao db
-      // payload co the co replyto hoac khong co
-      // neu co replyto => xu ly reply
-      // khong co => xu ly gui tin nhan
       const { message, members } = await sendMessageService(
         conversationId,
         senderId,
         payload
       );
 
+      const m = message.toObject();
+
       // emit tin nhan den room
-      io.to(conversationId).emit("new_message", message);
+      io.to(conversationId).emit("new_message", {
+        ...m,
+        _id: m._id.toString(),
+        conversationId: m.conversationId.toString(),
+        senderId: m.senderId.toString(),
+        replyTo: m.replyTo ? m.replyTo.toString() : null,
+        seenBy: (m.seenBy || []).map((id) => id.toString()),
+        hiddenFor: (m.hiddenFor || []).map((id) => id.toString()),
+        createdAt: m.createdAt.toISOString(),
+        updatedAt: m.updatedAt.toISOString(),
+        editedAt: m.editedAt ? m.editedAt.toISOString() : null,
+        revokedAt: m.revokedAt ? m.revokedAt.toISOString() : null,
+      });
 
       // update convos list
       for (const memberId of members) {
@@ -110,21 +119,21 @@ export default function registerMessageHandler(io, socket) {
       });
 
       // emit global update conversation list
-      for (const memberId of msg.members ?? []) {
-        if (memberId.toString() === userId.toString()) continue;
-        io.to(memberId.toString()).emit("convos:update", {
-          conversationId: msg.conversationId.toString(),
-          latestMessage: {
-            _id: msg._id.toString(),
-            content: msg.content,
-            type: msg.type,
-            senderId: msg.senderId.toString(),
-            createdAt: msg.createdAt,
-            editedAt: msg.editedAt,
-            isMine: false,
-          },
-        });
-      }
+      // for (const memberId of msg.members ?? []) {
+      //   if (memberId.toString() === userId.toString()) continue;
+      //   io.to(memberId.toString()).emit("convos:update", {
+      //     conversationId: msg.conversationId.toString(),
+      //     latestMessage: {
+      //       _id: msg._id.toString(),
+      //       content: msg.content,
+      //       type: msg.type,
+      //       senderId: msg.senderId.toString(),
+      //       createdAt: msg.createdAt,
+      //       editedAt: msg.editedAt,
+      //       isMine: false,
+      //     },
+      //   });
+      // }
     } catch (err) {
       console.error("Socket edit_message:", err.message);
     }
@@ -148,21 +157,21 @@ export default function registerMessageHandler(io, socket) {
       });
 
       // emit global update conversation list
-      for (const memberId of msg.members ?? []) {
-        if (memberId.toString() === userId.toString()) continue;
-        io.to(memberId.toString()).emit("convos:update", {
-          conversationId: msg.conversationId.toString(),
-          latestMessage: {
-            _id: msg._id.toString(),
-            content: msg.content,
-            type: msg.type,
-            senderId: msg.senderId.toString(),
-            createdAt: msg.createdAt,
-            editedAt: msg.editedAt,
-            isMine: false,
-          },
-        });
-      }
+      // for (const memberId of msg.members ?? []) {
+      //   if (memberId.toString() === userId.toString()) continue;
+      //   io.to(memberId.toString()).emit("convos:update", {
+      //     conversationId: msg.conversationId.toString(),
+      //     latestMessage: {
+      //       _id: msg._id.toString(),
+      //       content: msg.content,
+      //       type: msg.type,
+      //       senderId: msg.senderId.toString(),
+      //       createdAt: msg.createdAt,
+      //       editedAt: msg.editedAt,
+      //       isMine: false,
+      //     },
+      //   });
+      // }
     } catch (err) {
       console.error("Socket revoke_message:", err.message);
     }

@@ -33,9 +33,14 @@ export const getMessagesService = async (
 export const sendMessageService = async (conversationId, senderId, payload) => {
   const type = payload.type ?? "text";
 
-  // validate
   if (!conversationId) throw new error.BadRequestError("thiếu id hội thoại");
+
   if (!senderId) throw new error.BadRequestError("thiếu id người gửi");
+
+  const ALLOWED_TYPES = ["text", "audio", "video", "file"];
+  if (!ALLOWED_TYPES.includes(type)) {
+    throw new error.BadRequestError("type tin nhắn không hợp lệ");
+  }
 
   if (type === "text" && !payload.content?.trim()) {
     throw new error.BadRequestError("tin nhắn text không được rỗng");
@@ -48,6 +53,28 @@ export const sendMessageService = async (conversationId, senderId, payload) => {
   const conversation = await cvsRepository.findConversationById(conversationId);
   if (!conversation) throw new error.NotFoundError("hội thoại không tồn tại");
 
+  const isMember = conversation.members
+    .map((id) => id.toString())
+    .includes(senderId.toString());
+
+  if (!isMember)
+    throw new error.ForbiddenError("bạn không thuộc hội thoại này");
+
+  if (conversation.type === "private") {
+    const [userA, userB] = conversation.members;
+
+    if (userA && userB) {
+      await frsService.checkBlockedService(
+        senderId.toString(),
+        userA.toString() === senderId.toString()
+          ? userB.toString()
+          : userA.toString()
+      );
+    }
+  }
+
+  let cleanReplyTo = null;
+
   if (payload.replyTo?.messageId) {
     const originalMsg = await msgRepository.findOriginalMsg(
       conversationId,
@@ -58,38 +85,24 @@ export const sendMessageService = async (conversationId, senderId, payload) => {
       throw new error.BadRequestError("tin nhắn được trả lời không tồn tại");
     }
 
-    // optional: đồng bộ lại replyTo từ DB cho an toàn
-    payload.replyTo = {
-      messageId: originalMsg._id,
-      senderId: originalMsg.senderId,
-      type: originalMsg.type,
-      content: originalMsg.content,
-      fileUrl: originalMsg.fileUrl ?? null,
-    };
-  }
-
-  // chat nhóm - kiểm tra là thành viên trong nhóm
-  const isMember = conversation.members
-    .map((id) => id.toString())
-    .includes(senderId.toString());
-
-  if (!isMember)
-    throw new error.ForbiddenError("bạn không thuộc hội thoại này");
-
-  // chat riêng - check block
-  if (conversation.type === "private") {
-    const [userA, userB] = conversation.members;
-
-    if (userA && userB) {
-      await frsService.checkBlockedService(userA.toString(), userB.toString());
+    if (originalMsg.status !== "normal") {
+      throw new error.BadRequestError("không thể trả lời tin nhắn đã thu hồi");
     }
+
+    cleanReplyTo = originalMsg._id;
   }
 
-  // có thể chat trong nhóm chung dù có block
+  const cleanPayload = {
+    type,
+    content: type === "text" ? payload.content : null,
+    fileUrl: type !== "text" ? payload.fileUrl : null,
+    replyTo: cleanReplyTo,
+  };
+
   const message = await msgRepository.sendMessage(
     conversationId,
     senderId,
-    payload
+    cleanPayload
   );
 
   return {

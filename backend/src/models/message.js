@@ -71,30 +71,9 @@ const messageSchema = new mongoose.Schema(
 
     // tra loi tin nhan
     replyTo: {
-      type: {
-        messageId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Message",
-        },
-        senderId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-        },
-        type: {
-          type: String,
-          enum: ["text", "audio", "video", "file"],
-        },
-        content: {
-          type: String,
-          trim: true,
-          maxlength: 5000,
-        },
-        fileUrl: {
-          type: String,
-          trim: true,
-          default: null,
-        },
-      },
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Message",
+      default: null,
     },
   },
   { timestamps: true }

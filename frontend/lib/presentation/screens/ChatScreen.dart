@@ -60,7 +60,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     // listen message
     socket.on("new_message", (data) {
-      final msg = Message.fromJson(data);
+      final msg = Message.fromJson(Map<String, dynamic>.from(data));
 
       // chỉ add nếu đúng phòng
       if (msg.conversationId == widget.conversation.id) {
@@ -168,6 +168,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (text.isEmpty) return;
 
     final editingMsg = ref.read(editingMessageProvider);
+    final replyToMsg = ref.read(replyToMessageProvider);
+
     if (editingMsg != null) {
       // chinh sua tin nhan
       socket.emit("edit_message", {"msgId": editingMsg.id, "content": text});
@@ -179,7 +181,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         "conversationId": widget.conversation.id,
         "type": "text",
         "content": text,
+        if (replyToMsg != null)
+          "replyTo": {
+            "messageId": replyToMsg.id, // chi gui id tin nhan
+          },
       });
+
+      ref.read(replyToMessageProvider.notifier).state = null;
     }
     _textController.clear();
   }
@@ -204,6 +212,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final meAsync = ref.watch(userProvider);
     final presenceMap = ref.watch(presenceProvider);
     final isOnline = presenceMap[widget.conversation.otherUser?.id];
+    final replyToMsg = ref.watch(replyToMessageProvider);
 
     return meAsync.when(
       data: (me) {
@@ -236,6 +245,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
                   // typing indicator
                   _buildTypingIndicator(),
+
+                  // reply to
+                  if (replyToMsg != null)
+                    _buildReplyMessage(
+                      replyMsg: replyToMsg,
+                      onCancel: () {
+                        ref.read(replyToMessageProvider.notifier).state = null;
+                      },
+                    ),
 
                   // input bar
                   _buildInputBar(),
@@ -326,6 +344,64 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
+  Widget _buildReplyMessage({
+    required Message replyMsg,
+    required VoidCallback onCancel,
+    bool isMe = false,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: isMe ? Colors.white.withOpacity(0.15) : Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(10),
+        border: Border(
+          left: BorderSide(
+            width: 4,
+            color: isMe ? Colors.white70 : Colors.blueAccent,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Đang trả lời",
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: isMe ? Colors.white70 : Colors.blueAccent,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  replyMsg.content ?? "Tin nhắn",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isMe ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.close,
+              size: 18,
+              color: isMe ? Colors.white70 : Colors.grey,
+            ),
+            onPressed: onCancel,
+          ),
+        ],
+      ),
+    );
+  }
+
   // input bar
   Widget _buildInputBar() {
     return Container(
@@ -353,15 +429,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 decoration: InputDecoration(
                   hintText: "Nhập tin nhắn...",
                   border: InputBorder.none,
-
-                  // gui icon
-                  // prefixIcon: IconButton(
-                  //   onPressed: () => print(""),
-                  //   icon: Icon(
-                  //     Icons.emoji_emotions_rounded,
-                  //     color: Colors.grey,
-                  //   ),
-                  // ),
                 ),
               ),
             ),
@@ -450,6 +517,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     void _handleEdit(Message msg) {
       // set trang thai dang edit
       ref.read(editingMessageProvider.notifier).state = msg;
+      ref.read(replyToMessageProvider.notifier).state = null;
 
       // dua noi dung tin nhan cu vao input
       _textController.text = msg.content ?? "";
@@ -477,7 +545,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           _handleEdit(msg);
           break;
         case "reply":
-          print("Trả lời tin nhắn");
+          ref.read(replyToMessageProvider.notifier).state = msg;
+          ref.read(editingMessageProvider.notifier).state = null;
+          break;
         case 'recall':
           // show dialog box truoc khi thu hoi
           _showDeleteConfirmDialog(msg.id, context, text);

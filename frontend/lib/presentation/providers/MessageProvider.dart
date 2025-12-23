@@ -5,6 +5,7 @@ import 'package:frontend/data/services/MessageService.dart';
 import 'package:frontend/presentation/providers/DioProvider.dart';
 
 final editingMessageProvider = StateProvider<Message?>((ref) => null);
+final replyToMessageProvider = StateProvider<Message?>((ref) => null);
 
 final msgServiceProvider = Provider((ref) {
   final dio = ref.watch(dioProvider);
