@@ -9,7 +9,7 @@ export const findOriginalMsg = async (conversationId, msgId) => {
   return await Message.findOne({
     conversationId,
     _id: msgId,
-  }).select("senderId content type fileUrl");
+  }).select("senderId content type fileUrl status");
 };
 
 // lấy lịch sử chat
