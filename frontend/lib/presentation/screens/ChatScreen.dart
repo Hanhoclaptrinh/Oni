@@ -488,8 +488,77 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   //   );
   // }
 
+  // helper lay ten nguoi gui
+  String _getSenderName({
+    required Message replyMsg,
+    required Conversation conversation,
+    required String myId,
+  }) {
+    if (replyMsg.senderId == myId) return "Bạn";
+
+    if (conversation.type == "private") {
+      return conversation.otherUser?.displayName ?? "Người dùng";
+    }
+
+    return conversation.members
+            .firstWhereOrNull((member) => member.id == replyMsg.senderId)
+            ?.displayName ??
+        "Người dùng";
+  }
+
+  // UI reply preview
+  Widget _buildReplyPreview(Message replyMsg, bool isMe) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: isMe ? Colors.white.withOpacity(0.15) : Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(8),
+        border: Border(
+          left: BorderSide(
+            width: 3,
+            color: isMe ? Colors.white70 : Colors.blueAccent,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _getSenderName(
+              replyMsg: replyMsg,
+              conversation: widget.conversation,
+              myId: ref.read(userProvider).value?.id ?? "",
+            ),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: isMe ? Colors.white70 : Colors.blueAccent,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            replyMsg.content ?? "Tin nhắn",
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 13,
+              color: isMe ? Colors.white : Colors.black87,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // message bubble
   Widget _buildMessageBubble(Message msg, bool isMe) {
+    final messages = ref.read(msgProvider(widget.conversation.id)).value ?? [];
+
+    final replyMsg = msg.replyTo != null
+        ? messages.firstWhereOrNull((e) => e.id == msg.replyTo)
+        : null;
+
     final scaleNotifier = ValueNotifier<double>(1.0);
 
     if (msg.status == "revoked") {
@@ -630,7 +699,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
         );
       },
-      child: _bubbleUI(msg, isMe),
+      child: _bubbleUI(msg, isMe, replyMsg: replyMsg),
     );
   }
 
@@ -723,13 +792,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _bubbleUI(Message msg, bool isMe) {
+  Widget _bubbleUI(Message msg, bool isMe, {Message? replyMsg}) {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 5),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        constraints: const BoxConstraints(maxWidth: 250),
+        constraints: const BoxConstraints(maxWidth: 260),
         decoration: BoxDecoration(
           color: isMe ? AppColors.bubbleBlue : Colors.white,
           borderRadius: BorderRadius.only(
@@ -743,12 +812,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 : const Radius.circular(18),
           ),
         ),
-        child: Text(
-          msg.content ?? "",
-          style: TextStyle(
-            color: isMe ? Colors.white : AppColors.textDark,
-            fontSize: 15,
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (replyMsg != null) _buildReplyPreview(replyMsg, isMe),
+
+            if (msg.content != null)
+              Text(
+                msg.content!,
+                style: TextStyle(
+                  color: isMe ? Colors.white : AppColors.textDark,
+                  fontSize: 15,
+                ),
+              ),
+          ],
         ),
       ),
     );
