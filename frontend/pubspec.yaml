@@ -13,6 +13,7 @@ dependencies:
   # Icons
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.2.3
+  emoji_picker_flutter: ^4.4.0
 
   # Date Time Formater
   intl: ^0.20.2

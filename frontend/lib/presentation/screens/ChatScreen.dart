@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -32,6 +34,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Timer? _typingTimer;
   bool _isTyping = false;
+  bool _showEmoji = false;
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
@@ -41,6 +45,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     // join room
     socket.emit("join_conversation", widget.conversation.id);
+
+    _focusNode.addListener(() {
+      if (_focusNode.hasFocus) {
+        setState(() {
+          _showEmoji = false;
+        });
+      }
+    });
 
     // listen keo len top (reverse == true trong listview)
     _scrollController.addListener(() {
@@ -159,6 +171,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     _typingTimer?.cancel();
     _textController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -257,6 +270,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
                   // input bar
                   _buildInputBar(),
+
+                  // emoji picker
+                  if (_showEmoji)
+                    SizedBox(
+                      height: 250,
+                      child: EmojiPicker(
+                        textEditingController: _textController,
+                        config: Config(
+                          height: 250,
+                          checkPlatformCompatibility: true,
+                          emojiViewConfig: EmojiViewConfig(
+                            columns: 7,
+                            emojiSizeMax: 32 * (Platform.isIOS ? 1.30 : 1.0),
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             );
@@ -424,11 +454,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ],
               ),
               child: TextField(
+                focusNode: _focusNode,
                 onChanged: _handleTyping,
                 controller: _textController,
                 decoration: InputDecoration(
                   hintText: "Nhập tin nhắn...",
                   border: InputBorder.none,
+                  prefixIcon: IconButton(
+                    icon: Icon(
+                      _showEmoji
+                          ? Icons.keyboard
+                          : Icons.emoji_emotions_outlined,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _showEmoji = !_showEmoji;
+                        if (_showEmoji) {
+                          _focusNode.unfocus();
+                        } else {
+                          _focusNode.requestFocus();
+                        }
+                      });
+                    },
+                  ),
                 ),
               ),
             ),

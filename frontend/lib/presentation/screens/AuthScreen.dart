@@ -35,7 +35,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 children: [
                   // app name
                   Text(
-                    "Oni Chat",
+                    "Oni",
                     style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
                   ),
 
