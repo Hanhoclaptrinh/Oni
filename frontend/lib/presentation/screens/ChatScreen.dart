@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -36,6 +37,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   bool _isTyping = false;
   bool _showEmoji = false;
   final FocusNode _focusNode = FocusNode();
+
+  final List<XFile> _selectedImages = [];
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -203,6 +207,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ref.read(replyToMessageProvider.notifier).state = null;
     }
     _textController.clear();
+    setState(() {
+      _selectedImages.clear();
+    });
+  }
+
+  // pick image
+  Future<void> _pickImage() async {
+    final List<XFile> images = await _picker.pickMultiImage();
+    if (images.isNotEmpty) {
+      setState(() {
+        _selectedImages.addAll(images);
+      });
+    }
   }
 
   // handle typing
@@ -434,78 +451,138 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   // input bar
   Widget _buildInputBar() {
+    final hasContent =
+        _textController.text.trim().isNotEmpty || _selectedImages.isNotEmpty;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
+          // File Preview
+          if (_selectedImages.isNotEmpty) _buildFilePreview(),
+
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 5),
+            height: 50,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(25),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                // Emoji Button
+                IconButton(
+                  icon: Icon(
+                    _showEmoji ? Icons.keyboard : Icons.emoji_emotions_outlined,
+                    color: Colors.grey,
                   ),
-                ],
-              ),
-              child: TextField(
-                focusNode: _focusNode,
-                onChanged: _handleTyping,
-                controller: _textController,
-                decoration: InputDecoration(
-                  hintText: "Nhập tin nhắn...",
-                  border: InputBorder.none,
-                  prefixIcon: IconButton(
-                    icon: Icon(
-                      _showEmoji
-                          ? Icons.keyboard
-                          : Icons.emoji_emotions_outlined,
-                      color: Colors.grey,
+                  onPressed: () {
+                    setState(() {
+                      _showEmoji = !_showEmoji;
+                      if (_showEmoji) {
+                        _focusNode.unfocus();
+                      } else {
+                        _focusNode.requestFocus();
+                      }
+                    });
+                  },
+                ),
+
+                // Text Field
+                Expanded(
+                  child: TextField(
+                    focusNode: _focusNode,
+                    onChanged: (val) {
+                      _handleTyping(val);
+                      setState(() {});
+                    },
+                    controller: _textController,
+                    decoration: const InputDecoration(
+                      hintText: "Nhập tin nhắn...",
+                      border: InputBorder.none,
                     ),
-                    onPressed: () {
+                  ),
+                ),
+
+                // Image Picker Button (Always visible)
+                IconButton(
+                  onPressed: _pickImage,
+                  icon: const Icon(Icons.image_outlined, color: Colors.black54),
+                ),
+
+                // Send Button (Visible if has content)
+                if (hasContent)
+                  IconButton(
+                    onPressed: _handleSend,
+                    icon: const Icon(
+                      Icons.send_rounded,
+                      color: AppColors.primaryBlue,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilePreview() {
+    return Container(
+      height: 80,
+      margin: const EdgeInsets.only(bottom: 10),
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          ..._selectedImages.asMap().entries.map((entry) {
+            final index = entry.key;
+            final file = entry.value;
+            return Stack(
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(right: 10),
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    image: DecorationImage(
+                      image: FileImage(File(file.path)),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 5,
+                  top: 0,
+                  child: GestureDetector(
+                    onTap: () {
                       setState(() {
-                        _showEmoji = !_showEmoji;
-                        if (_showEmoji) {
-                          _focusNode.unfocus();
-                        } else {
-                          _focusNode.requestFocus();
-                        }
+                        _selectedImages.removeAt(index);
                       });
                     },
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        size: 16,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-
-          // send button
-          Container(
-            height: 50,
-            width: 50,
-            decoration: const BoxDecoration(
-              color: AppColors.primaryBlue,
-              shape: BoxShape.circle,
-            ),
-            child: IconButton(
-              onPressed: _handleSend,
-              icon: SvgPicture.asset(
-                "assets/images/send.svg",
-                width: 24,
-                height: 24,
-                colorFilter: const ColorFilter.mode(
-                  Colors.white,
-                  BlendMode.srcIn,
-                ),
-              ),
-              iconSize: 20,
-            ),
-          ),
+              ],
+            );
+          }),
         ],
       ),
     );
