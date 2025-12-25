@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/constants/AppConstants.dart';
 import 'package:frontend/data/local/LocalStorageService.dart';
 import 'package:frontend/data/services/SocketService.dart';
+import 'package:logger/logger.dart';
 
 // dio dùng chung cho toàn app
 // không tạo nhiều dio
@@ -53,8 +54,11 @@ final dioProvider = Provider((ref) {
           return handler.next(error);
         }
 
+        Logger().w("401 Detected. checking refresh...");
+
         final rt = await local.getRefreshToken();
         if (rt == null) {
+          Logger().e("No Refresh Token found. Logout.");
           await local.clear();
           return handler.next(error);
         }
@@ -63,6 +67,7 @@ final dioProvider = Provider((ref) {
         if (!isRefreshing) {
           isRefreshing = true;
           refreshCompleter = Completer<void>();
+          Logger().i("Starting Token Refresh...");
 
           try {
             final newTokens = await refreshDio.post(
@@ -70,15 +75,19 @@ final dioProvider = Provider((ref) {
               data: {"refreshToken": rt},
             );
 
-            final freshAT = newTokens.data["data"]["accessToken"];
-            final freshRT = newTokens.data["data"]["refreshToken"];
+            Logger().d("Refresh Response: ${newTokens.statusCode}");
+
+            final freshAT = newTokens.data["data"]["newAccessToken"];
+            final freshRT = newTokens.data["data"]["newRefreshToken"];
 
             await local.saveTokens(freshAT, freshRT);
+            Logger().i("Tokens saved. Reconnecting socket...");
 
             SocketService().reconnect(freshAT);
 
             refreshCompleter?.complete();
-          } catch (_) {
+          } catch (e) {
+            Logger().e("Refresh Failed: $e");
             refreshCompleter?.completeError("refresh_failed");
             await local.clear();
             return handler.next(error);
@@ -90,23 +99,39 @@ final dioProvider = Provider((ref) {
         try {
           // các req khác đợi refresh xong
           await refreshCompleter?.future;
-        } catch (_) {
+        } catch (e) {
+          Logger().e("Waiter failed: $e");
           return handler.next(error);
         }
 
         // retry
-        final newAT = await local.getAccessToken();
+        try {
+          Logger().i("Retrying request...");
+          final newAT = await local.getAccessToken();
 
-        final newReq = await dio.fetch(
-          error.requestOptions.copyWith(
+          // copy options de tranh bi duplicate header
+          final options = Options(
+            method: error.requestOptions.method,
             headers: {
               ...error.requestOptions.headers,
               "Authorization": "Bearer $newAT",
             },
-          ),
-        );
+          );
 
-        return handler.resolve(newReq);
+          final newReq = await dio.request(
+            error.requestOptions.path,
+            options: options,
+            data: error.requestOptions.data,
+            queryParameters: error.requestOptions.queryParameters,
+          );
+
+          Logger().i("Retry Success!");
+          return handler.resolve(newReq);
+        } catch (e) {
+          // neu retry ma van chet thi tra ve loi
+          Logger().e("Retry Failed: $e");
+          return handler.next(error);
+        }
       },
     ),
   );

@@ -214,7 +214,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   // pick image
   Future<void> _pickImage() async {
-    final List<XFile> images = await _picker.pickMultiImage();
+    final List<XFile> images = await _picker
+        .pickMultiImage(); // cho phep chon nhieu hinh anh
     if (images.isNotEmpty) {
       setState(() {
         _selectedImages.addAll(images);
@@ -458,7 +459,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
       child: Column(
         children: [
-          // File Preview
+          // file preview
           if (_selectedImages.isNotEmpty) _buildFilePreview(),
 
           Container(
@@ -477,12 +478,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
             child: Row(
               children: [
-                // Emoji Button
+                // emoji button
                 IconButton(
-                  icon: Icon(
-                    _showEmoji ? Icons.keyboard : Icons.emoji_emotions_outlined,
-                    color: Colors.grey,
-                  ),
+                  icon: _showEmoji
+                      ? SvgPicture.asset("assets/images/keyboard.svg")
+                      : SvgPicture.asset("assets/images/emoji.svg"),
                   onPressed: () {
                     setState(() {
                       _showEmoji = !_showEmoji;
@@ -495,7 +495,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   },
                 ),
 
-                // Text Field
+                // text field
                 Expanded(
                   child: TextField(
                     focusNode: _focusNode,
@@ -511,20 +511,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
                 ),
 
-                // Image Picker Button (Always visible)
+                // image picker button
                 IconButton(
                   onPressed: _pickImage,
-                  icon: const Icon(Icons.image_outlined, color: Colors.black54),
+                  icon: SvgPicture.asset("assets/images/album.svg"),
                 ),
 
-                // Send Button (Visible if has content)
+                // send button
+                // chi hien thi nut send khi co du lieu
                 if (hasContent)
                   IconButton(
                     onPressed: _handleSend,
-                    icon: const Icon(
-                      Icons.send_rounded,
-                      color: AppColors.primaryBlue,
-                    ),
+                    icon: SvgPicture.asset("assets/images/send.svg"),
                   ),
               ],
             ),
