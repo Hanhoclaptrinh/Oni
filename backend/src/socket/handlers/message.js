@@ -47,8 +47,9 @@ export default function registerMessageHandler(io, socket) {
           conversationId: conversationId.toString(),
           lastMessage: {
             _id: message._id.toString(),
-            content: message.content,
             type: message.type,
+            content: message.content,
+            media: message.media ?? null,
             createdAt: message.createdAt,
             editedAt: message.editedAt,
             isMine: false,

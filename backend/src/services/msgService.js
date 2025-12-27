@@ -46,8 +46,8 @@ export const sendMessageService = async (conversationId, senderId, payload) => {
     throw new error.BadRequestError("tin nhắn text không được rỗng");
   }
 
-  if (type !== "text" && !payload.fileUrl) {
-    throw new error.BadRequestError("tin nhắn file phải có fileUrl");
+  if (type !== "text" && !payload.media?.url) {
+    throw new error.BadRequestError("tin nhắn file không được để trống");
   }
 
   const conversation = await cvsRepository.findConversationById(conversationId);
@@ -95,7 +95,7 @@ export const sendMessageService = async (conversationId, senderId, payload) => {
   const cleanPayload = {
     type,
     content: type === "text" ? payload.content : null,
-    fileUrl: type !== "text" ? payload.fileUrl : null,
+    media: type !== "text" ? payload.media : null,
     replyTo: cleanReplyTo,
   };
 
@@ -168,7 +168,7 @@ export const revokeMessageService = async (msgId, userId) => {
   msg.status = "revoked";
   msg.revokedAt = new Date();
   msg.content = null;
-  msg.fileUrl = null;
+  msg.media = null;
 
   return await msgRepository.revokeMessage(msgId);
 };

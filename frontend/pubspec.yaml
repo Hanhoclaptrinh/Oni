@@ -27,13 +27,16 @@ dependencies:
   # State Management
   flutter_riverpod: ^3.0.3
 
-  # dotenv
+  # Dotenv
   flutter_dotenv: ^6.0.0
 
-  # picker
+  # Picker
   emoji_picker_flutter: ^4.4.0
   image_picker: ^1.2.1
   file_picker: ^10.3.8
+
+  # Progress
+  percent_indicator: ^4.2.5
 
 dev_dependencies:
   flutter_test:

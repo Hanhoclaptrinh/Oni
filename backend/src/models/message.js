@@ -27,10 +27,30 @@ const messageSchema = new mongoose.Schema(
       maxlength: 5000,
     },
 
-    fileUrl: {
-      type: String,
-      trim: true,
-      default: null,
+    // chicken guy :))
+    // fileUrl: {
+    //   type: String,
+    //   trim: true,
+    //   default: null,
+    // },
+
+    // pro max vip
+    media: {
+      url: {
+        type: String,
+        default: null,
+      },
+
+      type: {
+        type: String,
+        enum: ["image", "video", "file", "audio"],
+      },
+
+      size: Number, // kich thuoc file
+      width: Number, // kich thuoc image/video
+      height: Number,
+      duration: Number, // thoi gian audio/video
+      format: String, // format file (eg: .mp4, .png, .jpg, .mp3, ...)
     },
 
     seenBy: [

@@ -1,6 +1,4 @@
 import * as msgService from "../services/msgService.js";
-import Conversation from "../models/conversation.js";
-import * as error from "../utils/error.js";
 
 export const getMessagesHandler = async (req, res, next) => {
   try {
@@ -28,15 +26,8 @@ export const sendMessageHandler = async (req, res, next) => {
   try {
     const senderId = req.user.id;
     const { conversationId } = req.params;
-    const { type, content, fileUrl } = req.body;
-    const payload = { type, content, fileUrl };
-
-    if (!content && !fileUrl) {
-      return res.status(400).json({
-        success: false,
-        message: "tin nhắn rỗng không gửi được",
-      });
-    }
+    const { type, content, media } = req.body;
+    const payload = { type, content, media };
 
     const result = await msgService.sendMessageService(
       conversationId,
