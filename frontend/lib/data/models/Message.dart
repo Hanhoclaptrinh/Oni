@@ -1,11 +1,15 @@
+import 'package:frontend/core/utils/MessageStatus.dart';
+import 'package:frontend/data/models/Media.dart';
+
 class Message {
   final String id;
   final String conversationId;
   final String senderId;
   final String type;
-  final String status;
+  final String status; // trang thai tin nhan revoked / normal
+  final MessageStatus? msgStatusSending; // trang thai gui cua tin nhan
   final String? content;
-  final String? fileUrl;
+  final Media? media;
   final List<String> seenBy;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -18,8 +22,9 @@ class Message {
     required this.senderId,
     required this.type,
     required this.status,
+    required this.msgStatusSending,
     this.content,
-    this.fileUrl,
+    this.media,
     required this.seenBy,
     required this.createdAt,
     required this.updatedAt,
@@ -34,8 +39,9 @@ class Message {
       senderId: json["senderId"]?.toString() ?? "",
       type: json["type"] ?? "text",
       status: json["status"],
+      msgStatusSending: MessageStatus.sent,
       content: json["content"],
-      fileUrl: json["fileUrl"],
+      media: json["media"] != null ? Media.fromJson(json["media"]) : null,
       seenBy: json["seenBy"] != null
           ? List<String>.from(json["seenBy"].map((id) => id.toString()))
           : [],
@@ -59,8 +65,9 @@ class Message {
     String? senderId,
     String? type,
     String? status,
+    MessageStatus? msgStatusSending,
     String? content,
-    String? fileUrl,
+    Media? media,
     List<String>? seenBy,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -72,8 +79,9 @@ class Message {
     senderId: senderId ?? this.senderId,
     type: type ?? this.type,
     status: status ?? this.status,
+    msgStatusSending: msgStatusSending,
     content: content ?? this.content,
-    fileUrl: fileUrl ?? this.fileUrl,
+    media: media ?? this.media,
     seenBy: seenBy ?? this.seenBy,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,

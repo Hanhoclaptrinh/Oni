@@ -11,7 +11,7 @@ export default function registerMessageHandler(io, socket) {
   // gui tin nhan
   socket.on("send_message", async (payload) => {
     try {
-      const { conversationId } = payload;
+      const { conversationId, tempId } = payload;
       const senderId = socket.userId; // lấy từ middleware
 
       if (!conversationId || !senderId) return;
@@ -25,7 +25,7 @@ export default function registerMessageHandler(io, socket) {
       const m = message.toObject();
 
       // emit tin nhan den room
-      io.to(conversationId).emit("new_message", {
+      const normalizedMsg = {
         ...m,
         _id: m._id.toString(),
         conversationId: m.conversationId.toString(),
@@ -37,7 +37,15 @@ export default function registerMessageHandler(io, socket) {
         updatedAt: m.updatedAt.toISOString(),
         editedAt: m.editedAt ? m.editedAt.toISOString() : null,
         revokedAt: m.revokedAt ? m.revokedAt.toISOString() : null,
+      };
+
+      // ack
+      socket.emit("msg:sent", {
+        tempId,
+        message: normalizedMsg,
       });
+
+      io.to(conversationId).emit("new_message", normalizedMsg);
 
       // update convos list
       for (const memberId of members) {

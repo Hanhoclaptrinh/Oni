@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'package:frontend/core/utils/MessageStatus.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:flutter/material.dart';
@@ -158,6 +159,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         Logger().e(st);
       }
     });
+
+    // temp message
+    socket.on("msg:sent", (data) {
+      try {
+        final tempId = data["tempId"];
+        final msgJson = Map<String, dynamic>.from(data["message"]);
+        final msg = Message.fromJson(
+          msgJson,
+        ).copyWith(msgStatusSending: MessageStatus.sent);
+
+        ref
+            .read(msgProvider(widget.conversation.id).notifier)
+            .replaceTempMessage(tempId, msg);
+      } catch (e, st) {
+        Logger().e("CRASH: $e");
+        Logger().e(st);
+      }
+    });
   }
 
   @override
@@ -186,6 +205,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     final editingMsg = ref.read(editingMessageProvider);
     final replyToMsg = ref.read(replyToMessageProvider);
+    final myId = ref.read(userProvider).value!.id;
+    final convoId = widget.conversation.id;
 
     if (editingMsg != null) {
       // chinh sua tin nhan
@@ -194,10 +215,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       // reset
       ref.read(editingMessageProvider.notifier).state = null;
     } else {
+      final tempId = "tmp_${DateTime.now().millisecondsSinceEpoch}";
+
+      final tempMsg = Message(
+        id: tempId,
+        conversationId: convoId,
+        senderId: myId,
+        type: "text",
+        status: "normal",
+        msgStatusSending: MessageStatus.sending,
+        content: text,
+        media: null,
+        seenBy: [],
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        replyTo: replyToMsg?.id,
+      );
+
+      ref.read(msgProvider(convoId).notifier).addMessage(tempMsg);
+
       socket.emit("send_message", {
-        "conversationId": widget.conversation.id,
+        "conversationId": convoId,
         "type": "text",
         "content": text,
+        "tempId": tempId,
         if (replyToMsg != null)
           "replyTo": {
             "messageId": replyToMsg.id, // chi gui id tin nhan
@@ -917,6 +958,27 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _bubbleUI(Message msg, bool isMe, {Message? replyMsg}) {
+    // status logic
+    Widget? statusIcon;
+    if (isMe) {
+      if (msg.msgStatusSending == MessageStatus.sending) {
+        statusIcon = const Icon(
+          Icons.access_time,
+          size: 14,
+          color: Colors.white70,
+        );
+      } else if (msg.msgStatusSending == MessageStatus.sent) {
+        // sent check
+        // check read
+        final isRead = msg.seenBy.any((id) => id != msg.senderId);
+        statusIcon = Icon(
+          isRead ? Icons.done_all : Icons.check,
+          size: 16,
+          color: isRead ? Colors.blue.shade100 : Colors.white70,
+        );
+      }
+    }
+
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -947,6 +1009,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 style: TextStyle(
                   color: isMe ? Colors.white : AppColors.textDark,
                   fontSize: 15,
+                ),
+              ),
+
+            // status icon
+            if (isMe && statusIcon != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [const SizedBox(width: 4), statusIcon],
                 ),
               ),
           ],

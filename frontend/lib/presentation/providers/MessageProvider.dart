@@ -82,7 +82,14 @@ class MessageNotifier extends StateNotifier<AsyncValue<List<Message>>> {
   // tin nhan moi - socket
   void addMessage(Message msg) {
     final current = state.value ?? [];
-    state = AsyncValue.data([msg, ...current]);
+    // check duplication
+    final index = current.indexWhere((m) => m.id == msg.id);
+    if (index != -1) {
+      current[index] = msg;
+      state = AsyncValue.data([...current]);
+    } else {
+      state = AsyncValue.data([msg, ...current]);
+    }
   }
 
   // seen
@@ -119,7 +126,7 @@ class MessageNotifier extends StateNotifier<AsyncValue<List<Message>>> {
     state = AsyncValue.data(
       current.map((m) {
         if (m.id == msgId) {
-          return m.copyWith(status: "revoked", content: null, fileUrl: null);
+          return m.copyWith(status: "revoked", content: null, media: null);
         }
         return m;
       }).toList(),
@@ -140,6 +147,14 @@ class MessageNotifier extends StateNotifier<AsyncValue<List<Message>>> {
         }
         return m;
       }).toList(),
+    );
+  }
+
+  // replace
+  void replaceTempMessage(String tempId, Message msg) {
+    final current = state.value ?? [];
+    state = AsyncValue.data(
+      current.map((m) => m.id == tempId ? msg : m).toList(),
     );
   }
 }
