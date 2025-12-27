@@ -93,12 +93,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     });
 
     socket.on("messages_seen", (data) {
-      final conversationId = data["conversationId"];
-      final userId = data["userId"];
+      try {
+        final conversationId = data["conversationId"];
+        final userId = data["userId"]?.toString();
 
-      if (conversationId != widget.conversation.id) return;
+        if (conversationId != widget.conversation.id || userId == null) return;
 
-      ref.read(msgProvider(conversationId).notifier).markSeenBy(userId);
+        ref.read(msgProvider(conversationId).notifier).markSeenBy(userId);
+      } catch (e) {
+        Logger().e("Error handling messages_seen: $e");
+      }
     });
 
     // listen typing
@@ -106,7 +110,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       if (data["conversationId"] != widget.conversation.id) return;
 
       final userId = data["userId"];
-      final myId = ref.read(userProvider).value?.id;
+      final myId = ref.read(userProvider).value!.id;
       if (userId == myId) return;
 
       final name = widget.conversation.type == "private"

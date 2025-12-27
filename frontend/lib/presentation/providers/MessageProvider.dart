@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:frontend/data/models/Message.dart';
 import 'package:frontend/data/services/MessageService.dart';
 import 'package:frontend/presentation/providers/DioProvider.dart';
+import 'package:logger/logger.dart';
 
 final editingMessageProvider = StateProvider<Message?>((ref) => null);
 final replyToMessageProvider = StateProvider<Message?>((ref) => null);
@@ -94,15 +95,24 @@ class MessageNotifier extends StateNotifier<AsyncValue<List<Message>>> {
 
   // seen
   void markSeenBy(String userId) {
+    Logger().d("MessageNotifier: markSeenBy $userId");
     final current = state.value ?? [];
-    state = AsyncValue.data(
-      current.map((msg) {
-        if (msg.senderId != userId && !msg.seenBy.contains(userId)) {
-          return msg.copyWith(seenBy: [...msg.seenBy, userId]);
-        }
-        return msg;
-      }).toList(),
-    );
+    int updatedCount = 0;
+
+    final newState = current.map((msg) {
+      if (msg.senderId != userId && !msg.seenBy.contains(userId)) {
+        updatedCount++;
+        return msg.copyWith(seenBy: [...msg.seenBy, userId]);
+      }
+      return msg;
+    }).toList();
+
+    if (updatedCount > 0) {
+      Logger().d("Updated $updatedCount messages as seen by $userId");
+      state = AsyncValue.data(newState);
+    } else {
+      Logger().d("No messages needed update for seenBy $userId");
+    }
   }
 
   // delete msg
