@@ -64,11 +64,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       // keo len top > 50 pixel thi load them tin nhan
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 50) {
+        if (!mounted) return;
         ref.read(msgProvider(widget.conversation.id).notifier).loadMore();
       }
     });
 
     Future.microtask(() {
+      if (!mounted) return;
       ref.read(cvsProvider.notifier).markAsRead(widget.conversation.id);
       ref.invalidate(msgProvider(widget.conversation.id));
     });
@@ -81,6 +83,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
       // chỉ add nếu đúng phòng
       if (msg.conversationId == widget.conversation.id) {
+        if (!mounted) return;
         ref.read(msgProvider(widget.conversation.id).notifier).addMessage(msg);
 
         // nếu là tin nhắn của người khác -> seen ngay
@@ -99,6 +102,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
         if (conversationId != widget.conversation.id || userId == null) return;
 
+        if (!mounted) return;
         ref.read(msgProvider(conversationId).notifier).markSeenBy(userId);
       } catch (e) {
         Logger().e("Error handling messages_seen: $e");
@@ -108,6 +112,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // listen typing
     socket.on("user_typing", (data) {
       if (data["conversationId"] != widget.conversation.id) return;
+      if (!mounted) return;
 
       final userId = data["userId"];
       final myId = ref.read(userProvider).value!.id;
@@ -126,6 +131,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     });
 
     socket.on("user_stop_typing", (data) {
+      if (!mounted) return;
       if (data["conversationId"] != widget.conversation.id) return;
       setState(() => _typingUsers.remove(data["userId"]));
     });
@@ -135,6 +141,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       try {
         if (data["conversationId"] != widget.conversation.id) return;
 
+        if (!mounted) return;
         ref
             .read(msgProvider(widget.conversation.id).notifier)
             .onMessageRevoked(data["msgId"].toString());
@@ -149,6 +156,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       try {
         if (data["conversationId"] != widget.conversation.id) return;
 
+        if (!mounted) return;
         ref
             .read(msgProvider(widget.conversation.id).notifier)
             .onMessageEdited(
@@ -173,6 +181,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           msgJson,
         ).copyWith(msgStatusSending: MessageStatus.sent);
 
+        if (!mounted) return;
         ref
             .read(msgProvider(widget.conversation.id).notifier)
             .replaceTempMessage(tempId, msg);

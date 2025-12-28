@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/constants/AppColors.dart';
 import 'package:frontend/core/utils/RemoveVie.dart';
 import 'package:frontend/data/models/Conversation.dart';
+import 'package:frontend/data/models/LatestMessage.dart';
 import 'package:frontend/data/services/SocketService.dart';
 import 'package:frontend/presentation/providers/ConversationProvider.dart';
 import 'package:frontend/presentation/providers/SkSsProvider.dart';
 import 'package:frontend/presentation/screens/ChatScreen.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:logger/logger.dart';
 
 class ConversationScreen extends ConsumerStatefulWidget {
   const ConversationScreen({super.key});
@@ -44,12 +46,22 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     socket = SocketService().socket!;
 
     socket.on("convos:update", (data) {
-      ref
-          .read(cvsProvider.notifier)
-          .onConversationUpdate(
-            conversationId: data["conversationId"],
-            latestMessage: data["latestMessage"],
-          );
+      if (!mounted) return;
+      if (data["latestMessage"] == null) return;
+
+      try {
+        final lm = LatestMessage.fromJson(
+          Map<String, dynamic>.from(data["latestMessage"]),
+        );
+        ref
+            .read(cvsProvider.notifier)
+            .onConversationUpdate(
+              conversationId: data["conversationId"],
+              latestMessage: lm,
+            );
+      } catch (e) {
+        Logger().e("Error updating conversation: $e");
+      }
     });
   }
 

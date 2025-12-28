@@ -164,7 +164,14 @@ class MessageNotifier extends StateNotifier<AsyncValue<List<Message>>> {
   void replaceTempMessage(String tempId, Message msg) {
     final current = state.value ?? [];
     state = AsyncValue.data(
-      current.map((m) => m.id == tempId ? msg : m).toList(),
+      current.map((m) {
+        if (m.id == tempId) {
+          // merge seenBy
+          final uniqueSeen = {...m.seenBy, ...msg.seenBy}.toList();
+          return msg.copyWith(seenBy: uniqueSeen);
+        }
+        return m;
+      }).toList(),
     );
   }
 }
