@@ -1,6 +1,8 @@
+import 'package:frontend/core/utils/Enums.dart';
+
 class Media {
   final String url;
-  final String type; // image | video | audio | file
+  final MediaType type; // image | video | audio | file
   final int? size;
   final int? width;
   final int? height;
@@ -19,7 +21,7 @@ class Media {
 
   factory Media.fromJson(Map<String, dynamic> json) => Media(
     url: json["url"],
-    type: json["type"],
+    type: MediaType.values.firstWhere((e) => e.name == json["type"]),
     size: json["size"],
     width: json["width"],
     height: json["height"],

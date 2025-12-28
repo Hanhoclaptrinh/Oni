@@ -1,12 +1,12 @@
-import 'package:frontend/core/utils/MessageStatus.dart';
+import 'package:frontend/core/utils/Enums.dart';
 import 'package:frontend/data/models/Media.dart';
 
 class Message {
   final String id;
   final String conversationId;
   final String senderId;
-  final String type;
-  final String status; // trang thai tin nhan revoked / normal
+  final MessageType type;
+  final MessageStatusType status; // trang thai tin nhan revoked / normal
   final MessageStatus? msgStatusSending; // trang thai gui cua tin nhan
   final String? content;
   final Media? media;
@@ -37,8 +37,10 @@ class Message {
       id: json["_id"].toString(),
       conversationId: json["conversationId"].toString(),
       senderId: json["senderId"]?.toString() ?? "",
-      type: json["type"] ?? "text",
-      status: json["status"],
+      type: MessageType.values.firstWhere((e) => e.name == json["type"]),
+      status: MessageStatusType.values.firstWhere(
+        (e) => e.name == json["status"],
+      ),
       msgStatusSending: MessageStatus.sent,
       content: json["content"],
       media: json["media"] != null ? Media.fromJson(json["media"]) : null,
@@ -63,8 +65,8 @@ class Message {
     String? id,
     String? conversationId,
     String? senderId,
-    String? type,
-    String? status,
+    MessageType? type,
+    MessageStatusType? status,
     MessageStatus? msgStatusSending,
     String? content,
     Media? media,

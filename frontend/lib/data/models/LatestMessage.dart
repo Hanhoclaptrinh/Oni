@@ -1,12 +1,13 @@
+import 'package:frontend/core/utils/Enums.dart';
 import 'package:frontend/data/models/Message.dart';
 
 class LatestMessage {
   final String id;
   final String? content;
-  final String type;
+  final MessageType type;
   final DateTime createdAt;
-  DateTime? editedAt;
-  final bool isMine;
+  final DateTime? editedAt;
+  final String senderId;
 
   LatestMessage({
     required this.id,
@@ -14,19 +15,19 @@ class LatestMessage {
     required this.type,
     required this.createdAt,
     this.editedAt,
-    required this.isMine,
+    required this.senderId,
   });
 
   factory LatestMessage.fromJson(Map<String, dynamic> json) {
     return LatestMessage(
       id: json["_id"],
       content: json["content"],
-      type: json["status"] ?? json["type"] ?? "text",
+      type: MessageType.values.firstWhere((e) => e.name == json["type"]),
       createdAt: DateTime.parse(json["createdAt"]),
       editedAt: json["editedAt"] != null
           ? DateTime.parse(json["editedAt"])
           : null,
-      isMine: json["isMine"] ?? false,
+      senderId: json["senderId"] ?? "",
     );
   }
 
@@ -34,21 +35,34 @@ class LatestMessage {
     return LatestMessage(
       id: msg.id,
       content: msg.content,
-      type: msg.status,
+      type: msg.type,
       createdAt: msg.createdAt,
       editedAt: msg.editedAt,
-      isMine: isMine,
+      senderId: msg.senderId,
     );
   }
 
-  LatestMessage copyWith({String? content, String? type, DateTime? editedAt}) {
+  LatestMessage copyWith({
+    String? content,
+    MessageType? type,
+    DateTime? editedAt,
+  }) {
     return LatestMessage(
       id: id,
       content: content ?? this.content,
       type: type ?? this.type,
       createdAt: createdAt,
       editedAt: editedAt,
-      isMine: isMine,
+      senderId: senderId,
     );
+  }
+
+  String get previewText {
+    switch (type) {
+      case MessageType.text:
+        return content ?? "";
+      case MessageType.media:
+        return "📎 Đã gửi file";
+    }
   }
 }

@@ -36,6 +36,25 @@ class ConversationNotifier
     }
   }
 
+  void onConversationUpdate({
+    required String conversationId,
+    required LatestMessage latestMessage,
+    required String myUserId,
+  }) {
+    state = state.whenData((list) {
+      final idx = list.indexWhere((c) => c.id == conversationId);
+      if (idx == -1) return list;
+
+      final conv = list[idx];
+      final updated = conv.copyWith(
+        latestMessage: latestMessage,
+        hasUnread: latestMessage.senderId != myUserId,
+      );
+
+      return [updated, ...list.where((c) => c.id != conversationId)];
+    });
+  }
+
   void onNewGlobalMessage(Message msg, String myUserId) {
     final current = state.value ?? [];
 
@@ -61,23 +80,6 @@ class ConversationNotifier
       return list.map((c) {
         if (c.id == conversationId) {
           return c.copyWith(hasUnread: false);
-        }
-        return c;
-      }).toList();
-    });
-  }
-
-  void onConversationUpdate({
-    required String conversationId,
-    required LatestMessage latestMessage,
-  }) {
-    state = state.whenData((list) {
-      return list.map((c) {
-        if (c.id == conversationId) {
-          return c.copyWith(
-            latestMessage: latestMessage,
-            hasUnread: !latestMessage.isMine,
-          );
         }
         return c;
       }).toList();

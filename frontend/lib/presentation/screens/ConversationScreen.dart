@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/constants/AppColors.dart';
+import 'package:frontend/core/utils/Enums.dart';
 import 'package:frontend/core/utils/RemoveVie.dart';
 import 'package:frontend/data/models/Conversation.dart';
 import 'package:frontend/data/models/LatestMessage.dart';
 import 'package:frontend/data/services/SocketService.dart';
 import 'package:frontend/presentation/providers/ConversationProvider.dart';
 import 'package:frontend/presentation/providers/SkSsProvider.dart';
+import 'package:frontend/presentation/providers/UserProvider.dart';
 import 'package:frontend/presentation/screens/ChatScreen.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:logger/logger.dart';
@@ -32,7 +34,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
         c.displayNameSafe.toLowerCase(),
       );
       final lastMsg = RemoveVie().removeVietnameseAccent(
-        (c.latestMessage?.content ?? "").toLowerCase(),
+        (c.latestMessage?.previewText ?? "").toLowerCase(),
       );
 
       return name.contains(k) || lastMsg.contains(k);
@@ -53,11 +55,14 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
         final lm = LatestMessage.fromJson(
           Map<String, dynamic>.from(data["latestMessage"]),
         );
+        final myUserId = ref.read(userProvider).value?.id;
+        if (myUserId == null) return;
         ref
             .read(cvsProvider.notifier)
             .onConversationUpdate(
               conversationId: data["conversationId"],
               latestMessage: lm,
+              myUserId: myUserId,
             );
       } catch (e) {
         Logger().e("Error updating conversation: $e");
@@ -183,7 +188,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
           setState(() => _keyword = value.toLowerCase().trim());
         },
         decoration: InputDecoration(
-          hintText: "Search a friend",
+          hintText: "Search group chat or friend",
           hintStyle: const TextStyle(color: AppColors.textGrey),
           border: InputBorder.none,
           prefixIcon: Icon(Icons.search_rounded, color: Colors.black, size: 25),
@@ -196,25 +201,26 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     );
   }
 
-  String _buildLastMessageText(Conversation c) {
+  String _buildLastMessageText(Conversation c, String myUserId) {
     final lm = c.latestMessage;
 
-    if (lm == null || lm.content == null || lm.content!.isEmpty) {
+    if (lm == null) {
       return "Bắt đầu cuộc trò chuyện";
     }
 
-    if (lm.type == "revoked") {
+    if (lm.type == MessageType.text &&
+        (lm.content == null || lm.content!.isEmpty)) {
       return "Tin nhắn đã bị thu hồi";
     }
 
-    if (lm.isMine) {
-      return "Bạn: ${lm.content}";
-    }
-
-    return lm.content!;
+    final isMine = lm.senderId == myUserId;
+    final prefix = isMine ? "Bạn: " : "";
+    return prefix + lm.previewText;
   }
 
   Widget _buildConversationItem(BuildContext context, Conversation c) {
+    final myUserId = ref.read(userProvider).value?.id;
+    if (myUserId == null) return SizedBox.shrink();
     final isPrivate = c.type == "private";
     final displayName = isPrivate
         ? c.otherUser?.displayName ?? "Người lạ"
@@ -222,8 +228,9 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
 
     final String? avatar = isPrivate ? c.otherUser?.avatarUrl : c.avatarUrl;
 
-    final isUnread = c.hasUnread;
-    final lastMsgText = _buildLastMessageText(c);
+    final lm = c.latestMessage;
+    final isUnread = lm != null && lm.senderId != myUserId && c.hasUnread;
+    final lastMsgText = _buildLastMessageText(c, myUserId);
 
     return GestureDetector(
       onTap: () async {

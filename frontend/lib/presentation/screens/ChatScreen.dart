@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
-import 'package:frontend/core/utils/MessageStatus.dart';
+import 'package:frontend/core/utils/Enums.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:flutter/material.dart';
@@ -104,8 +104,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
         if (!mounted) return;
         ref.read(msgProvider(conversationId).notifier).markSeenBy(userId);
-      } catch (e) {
-        Logger().e("Error handling messages_seen: $e");
+      } catch (e, st) {
+        Logger().e("CRASH: $e");
+        Logger().e(st);
       }
     });
 
@@ -204,6 +205,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     socket.off("user_stop_typing");
     socket.off("msg:revoked");
     socket.off("msg:edited");
+    socket.off("msg:sent");
 
     _typingTimer?.cancel();
     _textController.dispose();
@@ -213,57 +215,62 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   // handle send
   void _handleSend() async {
-    final text = _textController.text.trim();
-    if (text.isEmpty) return;
+    try {
+      final text = _textController.text.trim();
+      if (text.isEmpty) return;
 
-    final editingMsg = ref.read(editingMessageProvider);
-    final replyToMsg = ref.read(replyToMessageProvider);
-    final myId = ref.read(userProvider).value!.id;
-    final convoId = widget.conversation.id;
+      final editingMsg = ref.read(editingMessageProvider);
+      final replyToMsg = ref.read(replyToMessageProvider);
+      final myId = ref.read(userProvider).value!.id;
+      final convoId = widget.conversation.id;
 
-    if (editingMsg != null) {
-      // chinh sua tin nhan
-      socket.emit("edit_message", {"msgId": editingMsg.id, "content": text});
+      if (editingMsg != null) {
+        // chinh sua tin nhan
+        socket.emit("edit_message", {"msgId": editingMsg.id, "content": text});
 
-      // reset
-      ref.read(editingMessageProvider.notifier).state = null;
-    } else {
-      final tempId = "tmp_${DateTime.now().millisecondsSinceEpoch}";
+        // reset
+        ref.read(editingMessageProvider.notifier).state = null;
+      } else {
+        final tempId = "tmp_${DateTime.now().millisecondsSinceEpoch}";
 
-      final tempMsg = Message(
-        id: tempId,
-        conversationId: convoId,
-        senderId: myId,
-        type: "text",
-        status: "normal",
-        msgStatusSending: MessageStatus.sending,
-        content: text,
-        media: null,
-        seenBy: [],
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        replyTo: replyToMsg?.id,
-      );
+        final tempMsg = Message(
+          id: tempId,
+          conversationId: convoId,
+          senderId: myId,
+          type: MessageType.text,
+          status: MessageStatusType.normal,
+          msgStatusSending: MessageStatus.sending,
+          content: text,
+          media: null,
+          seenBy: [],
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          replyTo: replyToMsg?.id,
+        );
 
-      ref.read(msgProvider(convoId).notifier).addMessage(tempMsg);
+        ref.read(msgProvider(convoId).notifier).addMessage(tempMsg);
 
-      socket.emit("send_message", {
-        "conversationId": convoId,
-        "type": "text",
-        "content": text,
-        "tempId": tempId,
-        if (replyToMsg != null)
-          "replyTo": {
-            "messageId": replyToMsg.id, // chi gui id tin nhan
-          },
+        socket.emit("send_message", {
+          "conversationId": convoId,
+          "type": MessageType.text.name,
+          "content": text,
+          "tempId": tempId,
+          if (replyToMsg != null)
+            "replyTo": {
+              "messageId": replyToMsg.id, // chi gui id tin nhan
+            },
+        });
+
+        ref.read(replyToMessageProvider.notifier).state = null;
+      }
+      _textController.clear();
+      setState(() {
+        _selectedImages.clear();
       });
-
-      ref.read(replyToMessageProvider.notifier).state = null;
+    } catch (e, st) {
+      Logger().e("CRASH: $e");
+      Logger().e(st);
     }
-    _textController.clear();
-    setState(() {
-      _selectedImages.clear();
-    });
   }
 
   // pick image
@@ -640,32 +647,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  // // message bubble - context menu ios
-  // Widget _buildMessageBubble(String text, bool isMe) {
-  //   return CupertinoContextMenu(
-  //     enableHapticFeedback: true,
-  //     actions: <Widget>[
-  //       CupertinoContextMenuAction(
-  //         onPressed: () => Navigator.pop(context),
-  //         trailingIcon: CupertinoIcons.doc_on_doc,
-  //         child: const Text('Sao chép'),
-  //       ),
-  //       CupertinoContextMenuAction(
-  //         onPressed: () => Navigator.pop(context),
-  //         trailingIcon: CupertinoIcons.pencil,
-  //         child: const Text('Chỉnh sửa'),
-  //       ),
-  //       CupertinoContextMenuAction(
-  //         isDestructiveAction: true,
-  //         onPressed: () => Navigator.pop(context),
-  //         trailingIcon: CupertinoIcons.trash,
-  //         child: const Text('Xóa'),
-  //       ),
-  //     ],
-  //     child: _bubbleUI(text, isMe),
-  //   );
-  // }
-
   // helper lay ten nguoi gui
   String _getSenderName({
     required Message replyMsg,
@@ -739,7 +720,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     final scaleNotifier = ValueNotifier<double>(1.0);
 
-    if (msg.status == "revoked") {
+    if (msg.status == MessageStatusType.revoked) {
       return Align(
         alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
         child: Container(
@@ -983,7 +964,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       } else if (msg.msgStatusSending == MessageStatus.sent) {
         // sent check
         // check read
-        final isRead = msg.seenBy.any((id) => id != msg.senderId);
+        final memCnt = widget
+            .conversation
+            .members
+            .length; // kiem tra so luong members trong conversation
+        final isRead =
+            msg.seenBy.length >=
+            memCnt -
+                1; // neu la group chat thi all user seen moi hien thi icon done_all
         statusIcon = Icon(
           isRead ? Icons.done_all : Icons.check,
           size: 16,

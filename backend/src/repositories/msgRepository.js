@@ -9,7 +9,7 @@ export const findOriginalMsg = async (conversationId, msgId) => {
   return await Message.findOne({
     conversationId,
     _id: msgId,
-  }).select("senderId content type media status");
+  }).select("_id senderId content type media status");
 };
 
 // lấy lịch sử chat
@@ -30,13 +30,15 @@ export const getMessages = (
 
 // gửi tin nhắn
 export const sendMessage = async (conversationId, senderId, payload) => {
+  const isMedia = payload.type === "media";
+
   const message = await Message.create({
     conversationId,
     senderId,
 
-    type: payload.type || "text",
+    type: isMedia ? "media" : "text",
     content: payload.content ?? null,
-    media: payload.media ?? null,
+    media: isMedia ? payload.media : null,
 
     replyTo: payload.replyTo?.messageId ?? payload.replyTo ?? null,
   });

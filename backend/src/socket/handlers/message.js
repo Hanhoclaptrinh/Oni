@@ -14,7 +14,15 @@ export default function registerMessageHandler(io, socket) {
       const { conversationId, tempId } = payload;
       const senderId = socket.userId; // lấy từ middleware
 
-      if (!conversationId || !senderId) return;
+      if (!conversationId || !senderId) {
+        console.log("Missing data", { conversationId, senderId });
+        return;
+      }
+
+      if (!payload || !payload.conversationId) {
+        socket.emit("error_message", "payload không hợp lệ");
+        return;
+      }
 
       const { message, members } = await sendMessageService(
         conversationId,

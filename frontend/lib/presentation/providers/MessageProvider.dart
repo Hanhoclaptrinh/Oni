@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:frontend/core/utils/Enums.dart';
 import 'package:frontend/data/models/Message.dart';
 import 'package:frontend/data/services/MessageService.dart';
 import 'package:frontend/presentation/providers/DioProvider.dart';
@@ -86,8 +87,9 @@ class MessageNotifier extends StateNotifier<AsyncValue<List<Message>>> {
     // check duplication
     final index = current.indexWhere((m) => m.id == msg.id);
     if (index != -1) {
-      current[index] = msg;
-      state = AsyncValue.data([...current]);
+      final updated = [...current];
+      updated[index] = msg;
+      state = AsyncValue.data(updated);
     } else {
       state = AsyncValue.data([msg, ...current]);
     }
@@ -136,7 +138,11 @@ class MessageNotifier extends StateNotifier<AsyncValue<List<Message>>> {
     state = AsyncValue.data(
       current.map((m) {
         if (m.id == msgId) {
-          return m.copyWith(status: "revoked", content: null, media: null);
+          return m.copyWith(
+            status: MessageStatusType.revoked,
+            content: null,
+            media: null,
+          );
         }
         return m;
       }).toList(),

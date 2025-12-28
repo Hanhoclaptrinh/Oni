@@ -37,7 +37,7 @@ export const sendMessageService = async (conversationId, senderId, payload) => {
 
   if (!senderId) throw new error.BadRequestError("thiếu id người gửi");
 
-  const ALLOWED_TYPES = ["text", "audio", "video", "file"];
+  const ALLOWED_TYPES = ["text", "media"];
   if (!ALLOWED_TYPES.includes(type)) {
     throw new error.BadRequestError("type tin nhắn không hợp lệ");
   }
@@ -46,8 +46,8 @@ export const sendMessageService = async (conversationId, senderId, payload) => {
     throw new error.BadRequestError("tin nhắn text không được rỗng");
   }
 
-  if (type !== "text" && !payload.media?.url) {
-    throw new error.BadRequestError("tin nhắn file không được để trống");
+  if (type === "media" && !payload.media?.url) {
+    throw new error.BadRequestError("tin nhắn media không được để trống");
   }
 
   const conversation = await cvsRepository.findConversationById(conversationId);
