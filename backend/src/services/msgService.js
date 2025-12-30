@@ -94,7 +94,7 @@ export const sendMessageService = async (conversationId, senderId, payload) => {
 
   const cleanPayload = {
     type,
-    content: type === "text" ? payload.content : null,
+    content: payload.content || null,
     media: type !== "text" ? payload.media : null,
     replyTo: cleanReplyTo,
   };

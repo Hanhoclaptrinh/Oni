@@ -1,8 +1,12 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:frontend/core/utils/Enums.dart';
+import 'package:frontend/data/services/CloudinaryService.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,6 +16,7 @@ import 'package:frontend/presentation/providers/SocketProvider.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:frontend/core/constants/AppColors.dart';
 import 'package:frontend/data/models/Conversation.dart';
+import 'package:frontend/data/models/Media.dart';
 import 'package:frontend/data/models/Message.dart';
 import 'package:frontend/data/services/SocketService.dart';
 import 'package:frontend/presentation/providers/MessageProvider.dart';
@@ -40,7 +45,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final FocusNode _focusNode = FocusNode();
 
   final List<XFile> _selectedImages = [];
+  final List<File> _selectedFiles = [];
   final ImagePicker _picker = ImagePicker();
+  final CloudinaryService _cloudinaryService = CloudinaryService();
+  bool _isUploading = false;
 
   @override
   void initState() {
@@ -217,7 +225,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _handleSend() async {
     try {
       final text = _textController.text.trim();
-      if (text.isEmpty) return;
+      final hasFiles = _selectedImages.isNotEmpty || _selectedFiles.isNotEmpty;
+
+      if (text.isEmpty && !hasFiles) return;
 
       final editingMsg = ref.read(editingMessageProvider);
       final replyToMsg = ref.read(replyToMessageProvider);
@@ -233,15 +243,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       } else {
         final tempId = "tmp_${DateTime.now().millisecondsSinceEpoch}";
 
+        // upload file len cloudinary
+        List<Media>? uploadedMedia;
+        if (hasFiles) {
+          uploadedMedia = await _uploadFilesToCloudinary();
+          if (uploadedMedia.isEmpty && hasFiles) {
+            return; // upload that bai thi khong seng tin nhan
+          }
+        }
+
+        // Determine message type
+        final messageType = hasFiles ? MessageType.media : MessageType.text;
+
         final tempMsg = Message(
           id: tempId,
           conversationId: convoId,
           senderId: myId,
-          type: MessageType.text,
+          type: messageType,
           status: MessageStatusType.normal,
           msgStatusSending: MessageStatus.sending,
-          content: text,
-          media: null,
+          content: text.isEmpty ? null : text,
+          media: uploadedMedia?.isNotEmpty == true
+              ? uploadedMedia!.first
+              : null,
           seenBy: [],
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
@@ -250,22 +274,40 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
         ref.read(msgProvider(convoId).notifier).addMessage(tempMsg);
 
-        socket.emit("send_message", {
+        final payload = {
           "conversationId": convoId,
-          "type": MessageType.text.name,
-          "content": text,
+          "type": messageType.name,
+          if (text.isNotEmpty) "content": text,
           "tempId": tempId,
+          if (uploadedMedia?.isNotEmpty == true)
+            "media": {
+              "url": uploadedMedia!.first.url,
+              "type": uploadedMedia.first.type.name,
+              if (uploadedMedia.first.size != null)
+                "size": uploadedMedia.first.size,
+              if (uploadedMedia.first.width != null)
+                "width": uploadedMedia.first.width,
+              if (uploadedMedia.first.height != null)
+                "height": uploadedMedia.first.height,
+              if (uploadedMedia.first.duration != null)
+                "duration": uploadedMedia.first.duration,
+              if (uploadedMedia.first.format != null)
+                "format": uploadedMedia.first.format,
+            },
           if (replyToMsg != null)
             "replyTo": {
               "messageId": replyToMsg.id, // chi gui id tin nhan
             },
-        });
+        };
+
+        socket.emit("send_message", payload);
 
         ref.read(replyToMessageProvider.notifier).state = null;
       }
       _textController.clear();
       setState(() {
         _selectedImages.clear();
+        _selectedFiles.clear();
       });
     } catch (e, st) {
       Logger().e("CRASH: $e");
@@ -280,6 +322,90 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (images.isNotEmpty) {
       setState(() {
         _selectedImages.addAll(images);
+      });
+    }
+  }
+
+  // pick files (documents, audio)
+  Future<void> _pickFiles() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        allowMultiple: true,
+        type: FileType.custom,
+        allowedExtensions: [
+          'pdf', 'doc', 'docx', 'txt', 'xls', 'xlsx', // documents
+          'mp3', 'wav', 'm4a', 'aac', // audio
+          'zip', 'rar', // archives
+        ],
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        setState(() {
+          _selectedFiles.addAll(
+            result.files.map((file) => File(file.path!)).toList(),
+          );
+        });
+      }
+    } catch (e) {
+      Logger().e('Error picking files: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Lỗi khi chọn file'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // handle upload file to cloudinary
+  Future<List<Media>> _uploadFilesToCloudinary() async {
+    final List<Media> uploadedMedia = [];
+
+    try {
+      setState(() {
+        _isUploading = true;
+      });
+
+      // upload image
+      for (final image in _selectedImages) {
+        final file = File(image.path);
+        final media = await _cloudinaryService.uploadFile(
+          file,
+          MediaType.image,
+        );
+        uploadedMedia.add(media);
+      }
+
+      // upload other files
+      for (final file in _selectedFiles) {
+        // determine media type based on extension
+        final extension = file.path.split('.').last.toLowerCase();
+        MediaType mediaType;
+        if (['mp3', 'wav', 'm4a', 'aac'].contains(extension)) {
+          mediaType = MediaType.audio;
+        } else {
+          mediaType = MediaType.file;
+        }
+
+        final media = await _cloudinaryService.uploadFile(file, mediaType);
+        uploadedMedia.add(media);
+      }
+
+      return uploadedMedia;
+    } catch (e) {
+      Logger().e('Error uploading files: $e');
+      if (!mounted) return [];
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi khi upload file: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return [];
+    } finally {
+      setState(() {
+        _isUploading = false;
       });
     }
   }
@@ -514,14 +640,42 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   // input bar
   Widget _buildInputBar() {
     final hasContent =
-        _textController.text.trim().isNotEmpty || _selectedImages.isNotEmpty;
+        _textController.text.trim().isNotEmpty ||
+        _selectedImages.isNotEmpty ||
+        _selectedFiles.isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
       child: Column(
         children: [
+          // uploading indicator
+          if (_isUploading)
+            Container(
+              padding: const EdgeInsets.all(10),
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Đang upload file...',
+                    style: TextStyle(color: Colors.blue),
+                  ),
+                ],
+              ),
+            ),
+
           // file preview
-          if (_selectedImages.isNotEmpty) _buildFilePreview(),
+          if (_selectedImages.isNotEmpty || _selectedFiles.isNotEmpty)
+            _buildFilePreview(),
 
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 5),
@@ -574,8 +728,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
                 // image picker button
                 IconButton(
-                  onPressed: _pickImage,
+                  onPressed: _isUploading ? null : _pickImage,
                   icon: SvgPicture.asset("assets/images/album.svg"),
+                ),
+
+                // folder/file picker button
+                IconButton(
+                  onPressed: _isUploading ? null : _pickFiles,
+                  icon: SvgPicture.asset("assets/images/folder.svg"),
                 ),
 
                 // send button
@@ -600,6 +760,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
+          // image previews
           ..._selectedImages.asMap().entries.map((entry) {
             final index = entry.key;
             final file = entry.value;
@@ -624,6 +785,85 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     onTap: () {
                       setState(() {
                         _selectedImages.removeAt(index);
+                      });
+                    },
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        size: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          }),
+
+          // document file previews
+          ..._selectedFiles.asMap().entries.map((entry) {
+            final index = entry.key;
+            final file = entry.value;
+            final fileName = file.path.split('/').last.split('\\').last;
+            final extension = fileName.contains('.')
+                ? fileName.split('.').last.toUpperCase()
+                : 'FILE';
+
+            return Stack(
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(right: 10),
+                  width: 120,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.blue.shade50,
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.insert_drive_file,
+                        size: 30,
+                        color: Colors.blue.shade700,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        extension,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade700,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          fileName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 9,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  right: 5,
+                  top: 0,
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedFiles.removeAt(index);
                       });
                     },
                     child: Container(
@@ -799,9 +1039,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 120),
             child: GestureDetector(
-              onTapDown: (details) async {
-                HapticFeedback.lightImpact(); // phan hoi rung
-                scaleNotifier.value = 1.05; // zoom-in bubble 50%
+              onLongPressStart: (details) async {
+                HapticFeedback.heavyImpact(); // phan hoi rung manh hon cho long press
+                scaleNotifier.value = 0.95; // zoom-out slightly triggers effect
 
                 final pos = details.globalPosition; // vi tri click vao bubble
 
@@ -1004,12 +1244,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           children: [
             if (replyMsg != null) _buildReplyPreview(replyMsg, isMe),
 
+            // media content
+            if (msg.type == MessageType.media && msg.media != null)
+              _buildMediaContent(msg.media!, msg.msgStatusSending, isMe),
+
             if (msg.content != null)
-              Text(
-                msg.content!,
-                style: TextStyle(
-                  color: isMe ? Colors.white : AppColors.textDark,
-                  fontSize: 15,
+              Padding(
+                padding: msg.type == MessageType.media && msg.media != null
+                    ? const EdgeInsets.only(top: 8)
+                    : EdgeInsets.zero,
+                child: Text(
+                  msg.content!,
+                  style: TextStyle(
+                    color: isMe ? Colors.white : AppColors.textDark,
+                    fontSize: 15,
+                  ),
                 ),
               ),
 
@@ -1026,6 +1275,234 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  // build media content widget
+  Widget _buildMediaContent(Media media, MessageStatus? status, bool isMe) {
+    final isUploading = status == MessageStatus.sending;
+
+    switch (media.type) {
+      case MediaType.image:
+        return _buildImageContent(media, isUploading, isMe);
+      case MediaType.audio:
+      case MediaType.file:
+        return _buildFileContent(media, isUploading, isMe);
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  // build image content
+  Widget _buildImageContent(Media media, bool isUploading, bool isMe) {
+    return GestureDetector(
+      onTap: isUploading ? null : () => _viewImage(media.url),
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              media.url,
+              width: 200,
+              height: 200,
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  width: 200,
+                  height: 200,
+                  color: Colors.grey.shade200,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  ),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 200,
+                  height: 200,
+                  color: Colors.grey.shade200,
+                  child: const Icon(Icons.broken_image, size: 50),
+                );
+              },
+            ),
+          ),
+          if (isUploading)
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black45,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // build file content
+  Widget _buildFileContent(Media media, bool isUploading, bool isMe) {
+    final extension = media.format?.toUpperCase() ?? 'FILE';
+    final fileSize = media.size != null
+        ? '${(media.size! / 1024).toStringAsFixed(1)} KB'
+        : '';
+
+    return GestureDetector(
+      onTap: isUploading ? null : () => _openFile(media.url),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isMe ? Colors.white.withOpacity(0.2) : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isUploading)
+              const SizedBox(
+                width: 40,
+                height: 40,
+                child: CircularProgressIndicator(strokeWidth: 3),
+              )
+            else
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isMe
+                      ? Colors.white.withOpacity(0.3)
+                      : Colors.blue.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  media.type == MediaType.audio
+                      ? Icons.audiotrack
+                      : Icons.insert_drive_file,
+                  color: isMe ? Colors.white : Colors.blue.shade700,
+                  size: 24,
+                ),
+              ),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    extension,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: isMe ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  if (fileSize.isNotEmpty)
+                    Text(
+                      fileSize,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isMe ? Colors.white70 : Colors.grey.shade600,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            if (!isUploading) const SizedBox(width: 8),
+            if (!isUploading)
+              Icon(
+                Icons.download,
+                size: 18,
+                color: isMe ? Colors.white70 : Colors.grey.shade600,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // open file URL
+  Future<void> _openFile(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Không thể mở file'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      Logger().e('Error opening file: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi khi mở file: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // view image in dialog
+  void _viewImage(String url) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.9),
+      builder: (context) {
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(color: Colors.transparent),
+              ),
+            ),
+
+            Center(
+              child: InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 4.0,
+                child: Image.network(
+                  url,
+                  fit: BoxFit.contain,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return const Center(
+                      child: CircularProgressIndicator(color: Colors.white),
+                    );
+                  },
+                ),
+              ),
+            ),
+
+            Positioned(
+              top: 40,
+              right: 20,
+              child: Material(
+                color: Colors.transparent,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

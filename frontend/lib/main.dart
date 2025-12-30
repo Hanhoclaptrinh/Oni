@@ -13,7 +13,7 @@ Future<void> main() async {
   // bắt lỗi Flutter
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
-    debugPrint("🔥 FLUTTER ERROR");
+    debugPrint("FLUTTER ERROR");
     debugPrint(details.exceptionAsString());
     debugPrint(details.stack.toString());
   };
