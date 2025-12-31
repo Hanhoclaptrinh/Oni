@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/models/User.dart';
 import 'package:frontend/data/services/UserService.dart';
-import 'package:frontend/presentation/providers/DioProvider.dart';
+import 'package:frontend/providers/DioProvider.dart';
 
 final userServiceProvider = Provider((ref) {
   final dio = ref.watch(dioProvider);

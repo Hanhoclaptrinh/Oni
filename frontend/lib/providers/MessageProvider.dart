@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:frontend/core/utils/Enums.dart';
 import 'package:frontend/data/models/Message.dart';
 import 'package:frontend/data/services/MessageService.dart';
-import 'package:frontend/presentation/providers/DioProvider.dart';
+import 'package:frontend/providers/DioProvider.dart';
 import 'package:logger/logger.dart';
 
 final editingMessageProvider = StateProvider<Message?>((ref) => null);

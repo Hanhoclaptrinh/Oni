@@ -4,7 +4,7 @@ import 'package:frontend/data/models/Conversation.dart';
 import 'package:frontend/data/models/LatestMessage.dart';
 import 'package:frontend/data/models/Message.dart';
 import 'package:frontend/data/services/ConversationService.dart';
-import 'package:frontend/presentation/providers/DioProvider.dart';
+import 'package:frontend/providers/DioProvider.dart';
 
 final cvsServiceProvider = Provider((ref) {
   final dio = ref.watch(dioProvider);

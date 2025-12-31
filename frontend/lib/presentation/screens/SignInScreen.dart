@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/models/SigninRequest.dart';
 import 'package:frontend/data/local/LocalStorageService.dart';
 import 'package:frontend/data/services/SocketService.dart';
-import 'package:frontend/presentation/providers/AuthProvider.dart';
+import 'package:frontend/providers/AuthProvider.dart';
 import 'package:frontend/presentation/screens/MainScreen.dart';
 import 'package:logger/logger.dart';
 

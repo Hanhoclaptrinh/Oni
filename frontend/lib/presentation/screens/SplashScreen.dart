@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/local/LocalStorageService.dart';
 import 'package:frontend/data/services/SocketService.dart';
-import 'package:frontend/presentation/providers/AuthProvider.dart';
+import 'package:frontend/providers/AuthProvider.dart';
 import 'package:frontend/presentation/screens/AuthScreen.dart';
 import 'package:frontend/presentation/screens/MainScreen.dart';
 

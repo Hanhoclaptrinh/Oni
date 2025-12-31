@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:frontend/data/local/LocalStorageService.dart';
 import 'package:frontend/data/services/SocketService.dart';
-import 'package:frontend/presentation/providers/AuthProvider.dart';
+import 'package:frontend/providers/AuthProvider.dart';
 
 class SkSsService {
   final Ref ref;

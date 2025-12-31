@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/presentation/providers/SocketProvider.dart';
+import 'package:frontend/providers/SocketProvider.dart';
 import 'package:frontend/presentation/screens/SplashScreen.dart';
 
 Future<void> main() async {

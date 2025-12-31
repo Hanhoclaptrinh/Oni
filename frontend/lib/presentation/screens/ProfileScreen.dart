@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/models/User.dart';
-import 'package:frontend/presentation/providers/UserProvider.dart';
+import 'package:frontend/providers/UserProvider.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/core/constants/AppColors.dart';
 
