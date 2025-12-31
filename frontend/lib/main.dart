@@ -8,8 +8,6 @@ import 'package:frontend/presentation/providers/SocketProvider.dart';
 import 'package:frontend/presentation/screens/SplashScreen.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
   // bắt lỗi Flutter
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
@@ -21,6 +19,8 @@ Future<void> main() async {
   // bắt lỗi ngoài zone (async, socket, isolate)
   runZonedGuarded(
     () async {
+      WidgetsFlutterBinding.ensureInitialized();
+
       SystemChrome.setSystemUIOverlayStyle(
         const SystemUiOverlayStyle(
           statusBarColor: Colors.white,
