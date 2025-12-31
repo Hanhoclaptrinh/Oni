@@ -49,7 +49,7 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(presenceListenerProvider);
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Oni',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
