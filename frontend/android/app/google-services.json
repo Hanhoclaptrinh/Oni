@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "773054809316",
+    "project_id": "onisocial-8e3ad",
+    "storage_bucket": "onisocial-8e3ad.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:773054809316:android:c8787137dc6eb39bc358f1",
+        "android_client_info": {
+          "package_name": "com.hanhoclaptrinh.oni"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "773054809316-c71fo3rkrdg1k48v5ou9bj17pohglr2h.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hanhoclaptrinh.oni",
+            "certificate_hash": "02caeb442866c77520639e90bbefb519128337ac"
+          }
+        },
+        {
+          "client_id": "773054809316-5a24ucn8qqn7inmpqpbve2t4etapp6jd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDicQKegedZHfvF_-JAK7ypnp2QsAavBss"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "773054809316-5a24ucn8qqn7inmpqpbve2t4etapp6jd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -49,7 +49,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
     try {
       final auth = ref.read(authServiceProvider);
-      final result = await auth.signup(req);
+      final result = await auth.signUp(req);
 
       await LocalStorageService().saveTokens(
         result.accessToken,

@@ -42,7 +42,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
     try {
       final auth = ref.read(authServiceProvider);
-      final result = await auth.signin(req);
+      final result = await auth.signIn(req);
 
       await LocalStorageService().saveTokens(
         result.accessToken,

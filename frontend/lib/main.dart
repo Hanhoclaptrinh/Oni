@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/providers/SocketProvider.dart';
@@ -20,6 +21,7 @@ Future<void> main() async {
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
+      await Firebase.initializeApp();
 
       SystemChrome.setSystemUIOverlayStyle(
         const SystemUiOverlayStyle(

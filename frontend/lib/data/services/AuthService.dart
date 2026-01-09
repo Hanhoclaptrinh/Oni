@@ -13,17 +13,17 @@ class AuthService {
   static const _signOutUrl = "/auth/signout";
   static const _refreshTokenUrl = "/auth/refresh";
 
-  Future<AuthResult> signup(SignupRequest req) async {
+  Future<AuthResult> signUp(SignupRequest req) async {
     final res = await dio.post(_signUpUrl, data: req.toJson());
     return AuthResult.fromJson(res.data["data"]);
   }
 
-  Future<AuthResult> signin(SigninRequest req) async {
+  Future<AuthResult> signIn(SigninRequest req) async {
     final res = await dio.post(_signInUrl, data: req.toJson());
     return AuthResult.fromJson(res.data["data"]);
   }
 
-  Future<void> signout(String refreshToken) async {
+  Future<void> backendSignOut(String refreshToken) async {
     await dio.post(_signOutUrl, data: {"refreshToken": refreshToken});
   }
 
