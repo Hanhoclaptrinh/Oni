@@ -9,9 +9,9 @@ router.use(protectedRoute);
 
 router.post("/", postController.createPostHandler);
 
-router.get("/", postController.getFeedHandler);
+// router.get("/", postController.getFeedHandler);
 
-router.get("/:postId", postController.getPostDetailHandler);
+// router.get("/:postId", postController.getPostDetailHandler);
 
 router.patch("/:postId", postController.updatePostHandler);
 

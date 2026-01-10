@@ -7,6 +7,7 @@ import userRoute from "./routes/userRoute.js";
 import frsRoute from "./routes/frsRoute.js";
 import cvsRoute from "./routes/cvsRoute.js";
 import msgRoute from "./routes/msgRoute.js";
+import postRoute from "./routes/postRoute.js";
 import { app, server } from "./socket/index.js";
 
 dotenv.config();
@@ -20,6 +21,7 @@ app.use("/api/v1/users", userRoute);
 app.use("/api/v1/friends", frsRoute);
 app.use("/api/v1/conversations", cvsRoute);
 app.use("/api/v1/messages", msgRoute);
+app.use("/api/v1/posts", postRoute);
 
 connectDB()
   .then(() => {
