@@ -116,7 +116,9 @@ class _PostScreenState extends ConsumerState<PostScreen> {
         visibility: _visibility.name,
       );
 
-      await ref.read(postServiceProvider).createPost(post);
+      final result = await ref.read(postServiceProvider).createPost(post);
+
+      ref.read(postsProvider.notifier).addPost(result);
 
       if (mounted) {
         LoadingDialog.hide(context);

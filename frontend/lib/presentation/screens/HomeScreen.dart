@@ -1,21 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/data/models/Post.dart';
+import 'package:frontend/providers/PostProvider.dart';
 import 'package:frontend/presentation/widgets/SocialPostCard.dart';
 import 'package:frontend/presentation/screens/PostScreen.dart';
+import 'package:intl/intl.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
+    final postsAsync = ref.watch(postsProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
-      body: CustomScrollView(
-        slivers: [_buildSliverAppBar(), _buildSearchBar(), _buildPostList()],
+      body: RefreshIndicator(
+        onRefresh: () => ref.read(postsProvider.notifier).refresh(),
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          slivers: [
+            _buildSliverAppBar(),
+            _buildSearchBar(),
+            postsAsync.when(
+              data: (posts) => _buildPostList(posts),
+              loading: () => const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (e, _) => SliverFillRemaining(
+                child: Center(child: Text("Lỗi tải bài viết: $e")),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -107,46 +131,39 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // post list
-  Widget _buildPostList() {
+  Widget _buildPostList(List<Post> posts) {
+    if (posts.isEmpty) {
+      return const SliverFillRemaining(
+        child: Center(child: Text("Chưa có bài viết nào.")),
+      );
+    }
+
     return SliverList(
       delegate: SliverChildBuilderDelegate((context, index) {
-        if (index == 0) {
-          return SocialPostCard(
-            userName: "Nettie Fernandez",
-            userAvatarUrl: "https://i.pravatar.cc/150?img=5",
-            timeAgo: "Just now",
-            textContent:
-                "Thinking about overseas adventure travel? Have you put any thought into the best places",
-            imageUrls: const ["https://picsum.photos/600/600"],
-            likeCount: 439,
-            commentCount: 34,
-          );
-        } else if (index == 1) {
-          return SocialPostCard(
-            userName: "Design World",
-            userAvatarUrl: "https://i.pravatar.cc/150?img=12",
-            timeAgo: "2 hours ago",
-            textContent:
-                "Minimalist UI design is trending right now. Check out this clean interface.",
-            imageUrls: null,
-            likeCount: 120,
-            commentCount: 15,
-          );
-        } else {
-          return SocialPostCard(
-            userName: "Photography Hub",
-            userAvatarUrl: "https://i.pravatar.cc/150?img=3",
-            timeAgo: "1 day ago",
-            textContent: null,
-            imageUrls: const [
-              "https://picsum.photos/600/400",
-              "https://picsum.photos/600/401",
-            ],
-            likeCount: 890,
-            commentCount: 56,
-          );
-        }
-      }, childCount: 10),
+        final post = posts[index];
+        return SocialPostCard(
+          userName: post.author?.displayName ?? "Người dùng",
+          userAvatarUrl:
+              post.author?.avatarUrl ??
+              "https://ui-avatars.com/api/?name=${post.author?.displayName ?? 'User'}",
+          timeAgo: post.createdAt != null
+              ? _formatTimeAgo(post.createdAt!)
+              : "Vừa xong",
+          textContent: post.content,
+          imageUrls: post.images,
+          videoUrl: post.video,
+          likeCount: post.likeCount ?? 0,
+          commentCount: post.commentCount ?? 0,
+        );
+      }, childCount: posts.length),
     );
+  }
+
+  String _formatTimeAgo(DateTime date) {
+    final duration = DateTime.now().difference(date);
+    if (duration.inDays > 0) return DateFormat('dd/MM/yyyy').format(date);
+    if (duration.inHours > 0) return '${duration.inHours} giờ trước';
+    if (duration.inMinutes > 0) return '${duration.inMinutes} phút trước';
+    return 'Vừa xong';
   }
 }

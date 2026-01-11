@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:frontend/presentation/widgets/VideoPlayerWidget.dart';
 
 class SocialPostCard extends StatelessWidget {
   final String userName;
@@ -91,7 +92,7 @@ class SocialPostCard extends StatelessWidget {
           if (hasVideo)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: _buildVideoPlaceholder(context),
+              child: VideoPlayerWidget(videoUrl: videoUrl!),
             ),
 
           if (hasText)
@@ -183,38 +184,6 @@ class SocialPostCard extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVideoPlaceholder(BuildContext context) {
-    return Container(
-      height: 250,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          const Icon(Icons.play_circle_fill, size: 64, color: Colors.white70),
-          Positioned(
-            bottom: 16,
-            left: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                "Video",
-                style: TextStyle(color: Colors.white, fontSize: 12),
-              ),
             ),
           ),
         ],

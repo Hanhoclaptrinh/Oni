@@ -109,3 +109,7 @@ export const hardDeletePostService = async (postId, currentUser) => {
 
   return { success: true };
 };
+
+export const getFeedService = async (query) => {
+  return await postRepo.getFeed(query);
+};

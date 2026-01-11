@@ -55,12 +55,20 @@ class CloudinaryService {
       if (response.statusCode == 200) {
         final data = response.data;
         _logger.i('File uploaded successfully: ${data['secure_url']}');
+        _logger.d('Full Cloudinary Response: $data');
+
+        String secureUrl = data['secure_url'];
+        // mac dinh video co extension la .mp4
+        if (mediaType == MediaType.video && !secureUrl.contains('.')) {
+          final format = data['format'] ?? 'mp4';
+          secureUrl = '$secureUrl.$format';
+        }
 
         final fileName = file.path.split('/').last;
         final format = fileName.contains('.') ? fileName.split('.').last : null;
 
         return Media(
-          url: data['secure_url'],
+          url: secureUrl,
           type: mediaType,
           size: data['bytes'],
           width: data['width'],

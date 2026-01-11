@@ -12,4 +12,13 @@ class PostService {
     final res = await dio.post(_postUrl, data: post.toJson());
     return Post.fromJson(res.data["data"]);
   }
+
+  Future<List<Post>> getPosts({int page = 1, int limit = 10}) async {
+    final res = await dio.get(
+      _postUrl,
+      queryParameters: {'page': page, 'limit': limit},
+    );
+    final List data = res.data["data"];
+    return data.map((json) => Post.fromJson(json)).toList();
+  }
 }

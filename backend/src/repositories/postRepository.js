@@ -21,7 +21,8 @@ export const getFeed = ({ page = 1, limit = 10 }) => {
   })
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
-    .limit(limit);
+    .limit(limit)
+    .populate("authorId", "displayName avatarUrl");
 };
 
 // chinh sua bai viet

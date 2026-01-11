@@ -71,3 +71,19 @@ export const hardDeletePostHandler = async (req, res, next) => {
     next(e);
   }
 };
+
+export const getFeedHandler = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const posts = await postService.getFeedService({ page, limit });
+
+    res.json({
+      message: "Fetched feed successfully",
+      data: posts,
+    });
+  } catch (e) {
+    next(e);
+  }
+};
