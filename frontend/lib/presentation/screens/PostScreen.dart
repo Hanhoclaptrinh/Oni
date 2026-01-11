@@ -20,6 +20,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
   final TextEditingController _contentController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
   List<XFile> _selectedImages = [];
+  XFile? _selectedVideo;
   PostVisibility _visibility = PostVisibility.public;
   bool _isPosting = false;
 
@@ -38,17 +39,36 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     }
   }
 
+  Future<void> _pickVideo() async {
+    final XFile? video = await _picker.pickVideo(source: ImageSource.gallery);
+    if (video != null) {
+      setState(() {
+        _selectedVideo = video;
+      });
+    }
+  }
+
   void _removeImage(int index) {
     setState(() {
       _selectedImages.removeAt(index);
     });
   }
 
+  void _removeVideo() {
+    setState(() {
+      _selectedVideo = null;
+    });
+  }
+
   Future<void> _submitPost() async {
     // validate entry data
-    if (_contentController.text.trim().isEmpty && _selectedImages.isEmpty) {
+    if (_contentController.text.trim().isEmpty &&
+        _selectedImages.isEmpty &&
+        _selectedVideo == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Vui lòng nhập nội dung hoặc chọn ảnh")),
+        const SnackBar(
+          content: Text("Vui lòng nhập nội dung hoặc chọn ảnh/video"),
+        ),
       );
       return;
     }
@@ -61,11 +81,12 @@ class _PostScreenState extends ConsumerState<PostScreen> {
 
     try {
       List<String> imageUrls = [];
+      String? videoUrl;
 
-      // parallel upload
+      final cloudinary = ref.read(cloudinaryServiceProvider);
+
+      // parallel upload images
       if (_selectedImages.isNotEmpty) {
-        final cloudinary = ref.read(cloudinaryServiceProvider);
-
         // list items to upload
         final uploadTasks = _selectedImages.map((image) {
           return cloudinary.uploadFile(File(image.path), MediaType.image);
@@ -79,9 +100,19 @@ class _PostScreenState extends ConsumerState<PostScreen> {
         imageUrls = results.map((e) => e.url).toList();
       }
 
+      // upload video
+      if (_selectedVideo != null) {
+        final media = await cloudinary.uploadFile(
+          File(_selectedVideo!.path),
+          MediaType.video,
+        );
+        videoUrl = media.url;
+      }
+
       final post = Post(
         content: _contentController.text.trim(),
         images: imageUrls,
+        video: videoUrl,
         visibility: _visibility.name,
       );
 
@@ -111,7 +142,9 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     final userAsync = ref.watch(userProvider);
     // kiem tra xem co text hoac anh khong de enable nut dang
     final bool canPost =
-        _contentController.text.trim().isNotEmpty || _selectedImages.isNotEmpty;
+        _contentController.text.trim().isNotEmpty ||
+        _selectedImages.isNotEmpty ||
+        _selectedVideo != null;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -208,6 +241,7 @@ class _PostScreenState extends ConsumerState<PostScreen> {
                 ),
                 const SizedBox(height: 20),
                 if (_selectedImages.isNotEmpty) _buildImagePreview(),
+                if (_selectedVideo != null) _buildVideoPreview(),
               ],
             ),
           ),
@@ -441,9 +475,16 @@ class _PostScreenState extends ConsumerState<PostScreen> {
           children: [
             _buildToolbarAction(
               Icons.image_outlined,
-              "Ảnh/Video",
+              "Ảnh",
               Colors.green,
               _pickImages,
+            ),
+            const SizedBox(width: 20),
+            _buildToolbarAction(
+              Icons.video_collection_outlined,
+              "Video",
+              Colors.blueAccent,
+              _pickVideo,
             ),
             const SizedBox(width: 20),
             _buildToolbarAction(
@@ -488,6 +529,59 @@ class _PostScreenState extends ConsumerState<PostScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Icon(icon, color: color, size: 28),
+    );
+  }
+
+  Widget _buildVideoPreview() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Stack(
+        children: [
+          Container(
+            height: 250,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.black12,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: const Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.play_circle_outline,
+                    size: 50,
+                    color: Colors.white,
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    "Video đã chọn",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            top: 8,
+            right: 8,
+            child: GestureDetector(
+              onTap: _removeVideo,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Colors.black54,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.close, color: Colors.white, size: 18),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

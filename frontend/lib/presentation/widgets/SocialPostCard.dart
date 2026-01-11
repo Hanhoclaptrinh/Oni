@@ -6,8 +6,9 @@ class SocialPostCard extends StatelessWidget {
   final String userName;
   final String userAvatarUrl;
   final String timeAgo;
-  final String? textContent; // Có thể null (không bắt buộc)
-  final List<String>? imageUrls; // Có thể null (không bắt buộc)
+  final String? textContent;
+  final List<String>? imageUrls;
+  final String? videoUrl; // Thêm videoUrl
   final int likeCount;
   final int commentCount;
   final VoidCallback? onLikeTap; // Thêm callback để xử lý sự kiện
@@ -21,6 +22,7 @@ class SocialPostCard extends StatelessWidget {
     required this.timeAgo,
     this.textContent,
     this.imageUrls,
+    this.videoUrl,
     required this.likeCount,
     required this.commentCount,
     this.onLikeTap,
@@ -32,6 +34,7 @@ class SocialPostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // Logic kiểm tra dữ liệu
     bool hasImages = imageUrls != null && imageUrls!.isNotEmpty;
+    bool hasVideo = videoUrl != null && videoUrl!.isNotEmpty;
     bool hasText = textContent != null && textContent!.isNotEmpty;
 
     return Container(
@@ -88,6 +91,13 @@ class SocialPostCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: _PostImageSlider(imageUrls: imageUrls!),
+            ),
+
+          // 3. Video Section (Chỉ render nếu có video)
+          if (hasVideo)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: _buildVideoPlaceholder(context),
             ),
 
           // 3. Content Section (Chỉ render nếu có text)
