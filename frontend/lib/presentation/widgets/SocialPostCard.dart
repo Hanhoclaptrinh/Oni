@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class SocialPostCard extends StatelessWidget {
-  // Các tham số đầu vào
   final String userName;
   final String userAvatarUrl;
   final String timeAgo;
   final String? textContent;
   final List<String>? imageUrls;
-  final String? videoUrl; // Thêm videoUrl
+  final String? videoUrl;
   final int likeCount;
   final int commentCount;
-  final VoidCallback? onLikeTap; // Thêm callback để xử lý sự kiện
+  final VoidCallback? onLikeTap;
   final VoidCallback? onCommentTap;
   final VoidCallback? onShareTap;
 
@@ -32,7 +31,6 @@ class SocialPostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Logic kiểm tra dữ liệu
     bool hasImages = imageUrls != null && imageUrls!.isNotEmpty;
     bool hasVideo = videoUrl != null && videoUrl!.isNotEmpty;
     bool hasText = textContent != null && textContent!.isNotEmpty;
@@ -41,13 +39,11 @@ class SocialPostCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        // Thêm shadow nhẹ hoặc border dưới nếu muốn tách biệt các post
         border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Header
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -86,21 +82,18 @@ class SocialPostCard extends StatelessWidget {
 
           const SizedBox(height: 8),
 
-          // 2. Image Section (Chỉ render nếu có ảnh)
           if (hasImages)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: _PostImageSlider(imageUrls: imageUrls!),
             ),
 
-          // 3. Video Section (Chỉ render nếu có video)
           if (hasVideo)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: _buildVideoPlaceholder(context),
             ),
 
-          // 3. Content Section (Chỉ render nếu có text)
           if (hasText)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -117,7 +110,6 @@ class SocialPostCard extends StatelessWidget {
               ),
             ),
 
-          // 4. Footer Actions
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -197,6 +189,38 @@ class SocialPostCard extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildVideoPlaceholder(BuildContext context) {
+    return Container(
+      height: 250,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          const Icon(Icons.play_circle_fill, size: 64, color: Colors.white70),
+          Positioned(
+            bottom: 16,
+            left: 16,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                "Video",
+                style: TextStyle(color: Colors.white, fontSize: 12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _PostImageSlider extends StatefulWidget {
@@ -215,7 +239,6 @@ class _PostImageSliderState extends State<_PostImageSlider> {
   Widget build(BuildContext context) {
     final images = widget.imageUrls;
 
-    // 1 ảnh → không cần PageView
     if (images.length == 1) {
       return _buildImage(images.first);
     }
@@ -234,7 +257,6 @@ class _PostImageSliderState extends State<_PostImageSlider> {
           ),
         ),
 
-        // indicator 1/5
         Positioned(
           top: 16,
           right: 16,
