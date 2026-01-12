@@ -1,6 +1,6 @@
 import express from "express";
 import * as frsController from "../controllers/frsController.js";
-import { protectedRoute } from "../middleware/authMiddleware.js";
+import { protectedRoute } from "@bGV2aW5oaGFu/core-engine";
 const router = express.Router();
 
 router.use(protectedRoute);

@@ -1,4 +1,4 @@
-import * as postService from "../services/postService.js";
+import { postService } from "@bGV2aW5oaGFu/core-engine";
 
 export const createPostHandler = async (req, res, next) => {
   try {

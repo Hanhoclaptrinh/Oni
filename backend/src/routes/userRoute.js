@@ -1,7 +1,6 @@
 import express from "express";
 import * as userController from "../controllers/userController.js";
-import { protectedRoute } from "../middleware/authMiddleware.js";
-import { checkRole } from "../middleware/roleMiddleware.js";
+import { protectedRoute, checkRole } from "@bGV2aW5oaGFu/core-engine";
 const router = express.Router();
 
 router.get("/search", protectedRoute, userController.searchUserHandler);

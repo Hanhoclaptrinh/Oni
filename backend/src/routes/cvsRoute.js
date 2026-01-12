@@ -1,5 +1,5 @@
 import express from "express";
-import { protectedRoute } from "../middleware/authMiddleware.js";
+import { protectedRoute } from "@bGV2aW5oaGFu/core-engine";
 import * as cvsController from "../controllers/cvsController.js";
 const router = express.Router();
 

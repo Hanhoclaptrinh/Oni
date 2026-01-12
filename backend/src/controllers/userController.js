@@ -1,5 +1,4 @@
-import * as userService from "../services/userService.js";
-import * as error from "../utils/error.js";
+import { userService, error } from "@bGV2aW5oaGFu/core-engine";
 
 export const getAllUsersHandler = async (req, res, next) => {
   try {

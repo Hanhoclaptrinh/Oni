@@ -1,5 +1,4 @@
-import * as authService from "../services/authService.js";
-import * as error from "../utils/error.js";
+import { authService, error } from "@bGV2aW5oaGFu/core-engine";
 
 export const signUpHandler = async (req, res, next) => {
   try {

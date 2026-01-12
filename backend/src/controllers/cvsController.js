@@ -1,4 +1,4 @@
-import * as cvsService from "../services/cvsService.js";
+import { cvsService } from "@bGV2aW5oaGFu/core-engine";
 
 export const getMyConversationsHandler = async (req, res, next) => {
   try {

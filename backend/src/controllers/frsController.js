@@ -1,4 +1,4 @@
-import * as frsService from "../services/frsService.js";
+import { frsService } from "@bGV2aW5oaGFu/core-engine";
 
 export const createFriendRequestHandler = async (req, res, next) => {
   try {

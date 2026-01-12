@@ -1,4 +1,4 @@
-import * as msgService from "../services/msgService.js";
+import { msgService } from "@bGV2aW5oaGFu/core-engine";
 
 export const getMessagesHandler = async (req, res, next) => {
   try {

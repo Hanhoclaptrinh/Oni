@@ -1,6 +1,5 @@
 import express from "express";
-import { protectedRoute } from "../middleware/authMiddleware.js";
-import { checkRole } from "../middleware/roleMiddleware.js";
+import { protectedRoute, checkRole } from "@bGV2aW5oaGFu/core-engine";
 import * as postController from "../controllers/postController.js";
 
 const router = express.Router();
