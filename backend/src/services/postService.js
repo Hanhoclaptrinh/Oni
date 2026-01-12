@@ -113,3 +113,7 @@ export const hardDeletePostService = async (postId, currentUser) => {
 export const getFeedService = async (query) => {
   return await postRepo.getFeed(query);
 };
+
+export const getUserPostsService = async (userId) => {
+  return await postRepo.findPostsByAuthor(userId);
+};

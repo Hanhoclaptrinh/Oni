@@ -7,6 +7,7 @@ const router = express.Router();
 router.get("/search", protectedRoute, userController.searchUserHandler);
 
 router.get("/me", protectedRoute, userController.getMeHandler);
+router.put("/me", protectedRoute, userController.updateMeHandler);
 
 router.get("/", protectedRoute, checkRole, userController.getAllUsersHandler);
 router.post("/", protectedRoute, checkRole, userController.createUserHandler);

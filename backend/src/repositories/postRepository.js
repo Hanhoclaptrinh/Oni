@@ -25,6 +25,16 @@ export const getFeed = ({ page = 1, limit = 10 }) => {
     .populate("authorId", "displayName avatarUrl");
 };
 
+// tim bai viet cua mot nguoi
+export const findPostsByAuthor = (userId) => {
+  return Post.find({
+    authorId: userId,
+    isDeleted: false,
+  })
+    .sort({ createdAt: -1 })
+    .populate("authorId", "displayName avatarUrl");
+};
+
 // chinh sua bai viet
 export const updatePost = (postId, data) => {
   if (!mongoose.Types.ObjectId.isValid(postId)) return null; // khhong cho chinh sua nhung bai viet da bi xoa

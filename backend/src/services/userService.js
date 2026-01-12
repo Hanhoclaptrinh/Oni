@@ -1,6 +1,19 @@
 import * as userRepository from "../repositories/userRepository.js";
 import * as error from "../utils/error.js";
 import bcrypt from "bcrypt";
+import Post from "../models/post.js";
+import FriendShip from "../models/friendship.js";
+
+// user stats: posts, followers, following
+export const getUserStats = async (userId) => {
+  const [postCount, followersCount, followingCount] = await Promise.all([
+    Post.countDocuments({ authorId: userId, isDeleted: false }), // só lượng bài viết đã đăng
+    FriendShip.countDocuments({ recipient: userId, status: "accepted" }),  // só lượng người theo dõi
+    FriendShip.countDocuments({ requester: userId, status: "accepted" }), // só lượng người đang theo dõi
+  ]);
+
+  return { postCount, followersCount, followingCount };
+};
 
 export const getAllUsers = async () => {
   const users = await userRepository.findAllUsers();

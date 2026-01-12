@@ -21,4 +21,10 @@ class PostService {
     final List data = res.data["data"];
     return data.map((json) => Post.fromJson(json)).toList();
   }
+
+  Future<List<Post>> getUserPosts(String userId) async {
+    final res = await dio.get("$_postUrl/user/$userId");
+    final List data = res.data["data"];
+    return data.map((json) => Post.fromJson(json)).toList();
+  }
 }

@@ -12,4 +12,9 @@ class UserService {
     final res = await dio.get(_profileUrl);
     return User.fromJson(res.data["data"]);
   }
+
+  Future<User> updateProfile(Map<String, dynamic> data) async {
+    final res = await dio.put(_profileUrl, data: data);
+    return User.fromJson(res.data["data"]);
+  }
 }

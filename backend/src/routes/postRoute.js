@@ -10,6 +10,7 @@ router.use(protectedRoute);
 router.post("/", postController.createPostHandler);
 
 router.get("/", postController.getFeedHandler);
+router.get("/user/:userId", postController.getUserPostsHandler);
 
 // router.get("/:postId", postController.getPostDetailHandler);
 

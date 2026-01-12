@@ -11,6 +11,9 @@ class User {
   final String role;
   final bool emailVerified;
   final DateTime createdAt;
+  final int postCount;
+  final int followersCount;
+  final int followingCount;
 
   User({
     required this.id,
@@ -23,6 +26,9 @@ class User {
     required this.role,
     required this.emailVerified,
     required this.createdAt,
+    this.postCount = 0,
+    this.followersCount = 0,
+    this.followingCount = 0,
   });
 
   // lấy dữ liệu từ json và chuyển thành User
@@ -40,6 +46,9 @@ class User {
       createdAt: json["createdAt"] != null
           ? DateTime.parse(json["createdAt"])
           : DateTime.now(),
+      postCount: json['postCount'] ?? 0,
+      followersCount: json['followersCount'] ?? 0,
+      followingCount: json['followingCount'] ?? 0,
     );
   }
 }

@@ -87,3 +87,17 @@ export const getFeedHandler = async (req, res, next) => {
     next(e);
   }
 };
+
+export const getUserPostsHandler = async (req, res, next) => {
+  try {
+    const userId = req.params.userId;
+    const posts = await postService.getUserPostsService(userId);
+
+    res.json({
+      message: "Fetched user posts successfully",
+      data: posts,
+    });
+  } catch (e) {
+    next(e);
+  }
+};

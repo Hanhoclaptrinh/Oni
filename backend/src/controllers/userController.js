@@ -62,10 +62,12 @@ export const searchUserHandler = async (req, res, next) => {
 
 export const getMeHandler = async (req, res, next) => {
   try {
+    const stats = await userService.getUserStats(req.user._id);
+
     return res.status(200).json({
       success: true,
       message: "lấy user hiện tại thành công",
-      data: req.user,
+      data: { ...req.user, ...stats },
     });
   } catch (e) {
     next(e);
@@ -142,6 +144,32 @@ export const deleteUserHandler = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "xóa thành công user",
+    });
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const updateMeHandler = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const body = req.body;
+
+    if (!Object.keys(body).length) {
+      throw new error.BadRequestError("dữ liệu không được để trống");
+    }
+
+    // ngăn chặn việc tự update role
+    if (body.role) {
+      delete body.role;
+    }
+
+    const updatedUser = await userService.modifyUser(userId, body);
+
+    return res.status(200).json({
+      success: true,
+      message: "cập nhật hồ sơ thành công",
+      data: updatedUser,
     });
   } catch (e) {
     next(e);
