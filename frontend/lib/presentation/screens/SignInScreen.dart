@@ -5,6 +5,7 @@ import 'package:frontend/data/local/LocalStorageService.dart';
 import 'package:frontend/data/services/SocketService.dart';
 import 'package:frontend/providers/AuthProvider.dart';
 import 'package:frontend/presentation/screens/MainScreen.dart';
+import 'package:frontend/presentation/widgets/LoadingDialog.dart';
 import 'package:logger/logger.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
@@ -40,6 +41,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       password: _passwordController.text.trim(),
     );
 
+    // hiển thị loading dialog
+    LoadingDialog.show(context, message: "Đang đăng nhập...");
+
     try {
       final auth = ref.read(authServiceProvider);
       final result = await auth.signIn(req);
@@ -51,33 +55,38 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
       SocketService().connect(result.accessToken);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Đăng nhập thành công',
-            style: const TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      if (mounted) {
+        // ẩn loading dialog
+        LoadingDialog.hide(context);
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => MainScreen()),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đăng nhập thành công'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MainScreen()),
+        );
+      }
     } catch (e) {
       Logger().e("Lỗi $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Đăng nhập thất bại',
-            style: const TextStyle(color: Colors.white),
+
+      if (mounted) {
+        // ẩn loading dialog
+        LoadingDialog.hide(context);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Đăng nhập thất bại: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
           ),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 2),
-        ),
-      );
+        );
+      }
     }
   }
 

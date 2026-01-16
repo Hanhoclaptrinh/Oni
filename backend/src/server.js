@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import connectDB from "./config/database.js";
+import { connectDB } from "@bGV2aW5oaGFu/core-engine"
 import authRoute from "./routes/authRoute.js";
 import userRoute from "./routes/userRoute.js";
 import frsRoute from "./routes/frsRoute.js";
@@ -9,7 +9,6 @@ import cvsRoute from "./routes/cvsRoute.js";
 import msgRoute from "./routes/msgRoute.js";
 import postRoute from "./routes/postRoute.js";
 import { app, server } from "./socket/index.js";
-import mongoose from "mongoose";
 
 dotenv.config();
 const port = process.env.PORT || 5001;
@@ -26,14 +25,6 @@ app.use("/api/v1/posts", postRoute);
 
 connectDB()
   .then(async () => {
-    // Warmup connection với một simple query
-    try {
-      await mongoose.connection.collection("users").countDocuments({})
-      console.log("Database warmup successful")
-    } catch (err) {
-      console.warn("Warmup query failed:", err.message)
-    }
-    
     server.listen(port, () => {
       console.log(`server + Socket.IO running on port ${port}`);
     });

@@ -5,6 +5,7 @@ import 'package:frontend/data/local/LocalStorageService.dart';
 import 'package:frontend/data/services/SocketService.dart';
 import 'package:frontend/providers/AuthProvider.dart';
 import 'package:frontend/presentation/screens/MainScreen.dart';
+import 'package:frontend/presentation/widgets/LoadingDialog.dart';
 import 'package:logger/logger.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
@@ -47,6 +48,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       lastName: _lastNameController.text.trim(),
     );
 
+    // hiển thị loading dialog
+    LoadingDialog.show(context, message: "Đang tạo tài khoản...");
+
     try {
       final auth = ref.read(authServiceProvider);
       final result = await auth.signUp(req);
@@ -58,18 +62,38 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
       SocketService().connect(result.accessToken);
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const MainScreen()),
-      );
+      if (mounted) {
+        // ẩn loading dialog
+        LoadingDialog.hide(context);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Đăng ký thành công"),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MainScreen()),
+        );
+      }
     } catch (e) {
       Logger().e(e);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Đăng ký thất bại"),
-          backgroundColor: Colors.red,
-        ),
-      );
+
+      if (mounted) {
+        // ẩn loading dialog
+        LoadingDialog.hide(context);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Đăng ký thất bại: ${e.toString()}"),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 

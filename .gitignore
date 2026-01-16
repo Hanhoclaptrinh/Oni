@@ -3,4 +3,4 @@ core-engine/
 .env
 package-lock.json
 package.json
-
+.VSCodeCounter/

@@ -1519,7 +1519,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       );
     }
 
-    // group chat
+     // group chat
     final names = _typingUsers.values.join(", ");
     return Padding(
       padding: const EdgeInsets.only(left: 16, bottom: 6),
